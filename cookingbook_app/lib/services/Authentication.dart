@@ -8,7 +8,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 class Authentication with ChangeNotifier {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
-  static late bool isEmailVerifiedClone;
 
   late String userUid;
   String get getUserUid => userUid;
@@ -30,6 +29,7 @@ class Authentication with ChangeNotifier {
       userUid = user!.uid;
 
       print("LOGIN SUCESSFULLY WITH Uid == $userUid");
+
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
@@ -40,11 +40,6 @@ class Authentication with ChangeNotifier {
 
     //   throw error;if (error is FirebaseAuthException && error.code == 'user-not-found') {}
     // }
-  }
-
-  //sign out account email
-  Future logoutViaEmail() {
-    return firebaseAuth.signOut();
   }
 
   Future<User?> signUp(
@@ -71,34 +66,6 @@ class Authentication with ChangeNotifier {
       return null;
     }
   }
-
-  // Future<User?> signUp(
-  //     {required String userEmail,
-  //     required String password,
-  //     required BuildContext context}) async {
-  //   try {
-  //     await EmailVerificationScreen.completer.future;
-  //     UserCredential userCredential = await FirebaseAuth.instance
-  //         .createUserWithEmailAndPassword(email: userEmail, password: password);
-  //     return userCredential.user;
-
-  //     // UserCredential userCredential = await FirebaseAuth.instance
-  //     //     .createUserWithEmailAndPassword(email: userEmail, password: password);
-  //     // return userCredential.user;
-  //   } on FirebaseAuthException catch (e) {
-  //     if (e.code == 'weak-password') {
-  //       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-  //           content: Text('The password provided is too weak.')));
-  //     } else if (e.code == 'email-already-in-use') {
-  //       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-  //           content: Text('The account already exists for that email.')));
-  //     }
-  //     return null;
-  //   } catch (e) {
-  //     debugPrint(e.toString());
-  //     return null;
-  //   }
-  // }
 
   //create an account
   Future<UserCredential> createAccount(String email, String password) async {
@@ -134,10 +101,20 @@ class Authentication with ChangeNotifier {
     userUid = user!.uid;
 
     print('Google User Uid => $userUid');
+
     notifyListeners();
   }
 
-  Future signOutWithGoogle() async {
-    return googleSignIn.signOut();
+  Future onLogout(String signInMethod) async {
+    print("this is signInMethode in onLogout $signInMethod");
+    if (signInMethod == "emailAndPassword") {
+      print("logout by email password");
+      return firebaseAuth.signOut();
+    } else if (signInMethod == "google") {
+      print("logout by google");
+      return googleSignIn.signOut();
+    } else {
+      print("error onLogout Methode Authentication.dart");
+    }
   }
 }

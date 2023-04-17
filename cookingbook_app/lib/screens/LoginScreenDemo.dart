@@ -22,6 +22,7 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
   TextEditingController userPassWordConfirmController = TextEditingController();
   TextEditingController userPasswordController = TextEditingController();
   Authentication auth = Authentication();
+  late String signInMethod;
 
   bool _isLoading = false;
 
@@ -62,10 +63,14 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
                             userPasswordController.text)
                         .then((success) {
                       if (success) {
+                        setState(() {
+                          signInMethod = "emailPassword";
+                        });
                         Navigator.pushReplacement(
                             context,
                             PageTransition(
-                                child: LoginSuccessTest(),
+                                child: LoginSuccessTest(
+                                    signInMethod: signInMethod),
                                 type: PageTransitionType.bottomToTop));
                       }
                     }).catchError((error) {
@@ -97,6 +102,9 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
               GestureDetector(
                 onTap: () {
                   auth.signInWithGoogle().whenComplete(() {
+                    setState(() {
+                      signInMethod = "google";
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Center(
@@ -112,7 +120,7 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
                     Navigator.pushReplacement(
                         context,
                         PageTransition(
-                            child: HomeScreenDemo(),
+                            child: LoginSuccessTest(signInMethod: signInMethod),
                             type: PageTransitionType.leftToRight));
                   });
                 },
@@ -156,7 +164,6 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
                       backgroundColor: Colors.transparent,
                       radius: 60.0,
                     ),
-
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10.0),
                       child: TextField(
@@ -247,91 +254,6 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
                             },
                             child: Text("Sign Up"),
                           ),
-
-                    // child: FloatingActionButton(
-                    //   backgroundColor: Colors.red,
-                    //   child: Icon(
-                    //     Icons.check,
-                    //     color: Colors.white,
-                    //   ),
-
-                    // Padding(
-                    //   padding: const EdgeInsets.only(top: 8.0),
-                    //   child: FloatingActionButton(
-                    //     backgroundColor: Colors.red,
-                    //     child: Icon(
-                    //       Icons.check,
-                    //       color: Colors.white,
-                    //     ),
-                    //     onPressed: () {
-                    //       if (userEmailController.text.isNotEmpty &&
-                    //           userPasswordController.text.isNotEmpty &&
-                    //           userPassWordConfirmController.text.isNotEmpty) {
-                    //         if (userPasswordController.text ==
-                    //             userPassWordConfirmController.text) {
-                    //           auth
-                    //               .createAccount(
-                    //             userEmailController.text,
-                    //             userPasswordController.text,
-                    //           )
-                    //               .then((value) {
-                    //             User? user = value.user;
-                    //             if (user != null) {
-                    //               user.sendEmailVerification();
-                    //               Navigator.pushReplacement(
-                    //                 context,
-                    //                 PageTransition(
-                    //                   child: LoginScreenDemo(),
-                    //                   type: PageTransitionType.bottomToTop,
-                    //                 ),
-                    //               );
-                    //             }
-                    //           }).catchError((error) {
-                    //             print("Error message: " + error.toString());
-                    //             warningText(context, error.toString());
-                    //           });
-                    //         } else {
-                    //           warningText(context,
-                    //               "Passwords do not match, re-type please");
-                    //         }
-                    //         // auth
-                    //         //     .createAccount(
-                    //         //   userEmailController.text,
-                    //         //   userPasswordController.text,
-                    //         // )
-                    //         //     .then((value) {
-                    //         //   User? user = value.user;
-                    //         //   if (user != null) {
-                    //         //     user.sendEmailVerification();
-                    //         //     Navigator.pushReplacement(
-                    //         //       context,
-                    //         //       PageTransition(
-                    //         //         child: LoginSuccessTest(),
-                    //         //         type: PageTransitionType.bottomToTop,
-                    //         //       ),
-                    //         //     );
-                    //         //   }
-                    //         // }).catchError((error) {
-                    //         //   print("Error message: " + error.toString());
-                    //         //   warningText(context, error.toString());
-                    //         // });
-
-                    //         // auth
-                    //         //     .createAccount(userEmailController.text,
-                    //         //         userPasswordController.text)
-                    //         //     .whenComplete(() {
-                    //         //   Navigator.pushReplacement(
-                    //         //       context,
-                    //         //       PageTransition(
-                    //         //           child: LoginSuccessTest(),
-                    //         //           type: PageTransitionType.bottomToTop));
-                    //         // });
-                    //       } else {
-                    //         warningText(context, "fill the champ !");
-                    //       }
-                    //     },
-                    //   ),
-                    // )
                   ],
                 )),
           );
