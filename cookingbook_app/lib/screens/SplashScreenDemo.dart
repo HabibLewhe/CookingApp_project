@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:cookingbook_app/screens/HomeScreenDemo.dart';
+import 'package:cookingbook_app/screens/Home.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 
@@ -17,7 +17,7 @@ class _SplashscreenState extends State<Splashscreen> {
         () => Navigator.pushReplacement(
             context,
             PageTransition(
-                child: HomeScreenDemo(),
+                child: MyHomePage(),
                 type: PageTransitionType.leftToRight)));
     super.initState();
   }
@@ -25,7 +25,7 @@ class _SplashscreenState extends State<Splashscreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.deepOrange,
       body: Center(
           child: RichText(
         text: TextSpan(
@@ -34,22 +34,25 @@ class _SplashscreenState extends State<Splashscreen> {
                 fontFamily: 'Poppins',
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic,
                 fontSize: 30.0),
             children: <TextSpan>[
               TextSpan(
                 text: 'Cooking',
                 style: TextStyle(
                     fontFamily: 'Poppins',
-                    color: Colors.blue,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
                     fontSize: 34.0),
               ),
               TextSpan(
                 text: 'Book',
                 style: TextStyle(
                     fontFamily: 'Poppins',
-                    color: Colors.blue,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
                     fontSize: 34.0),
               )
             ]),
