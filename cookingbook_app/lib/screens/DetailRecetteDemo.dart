@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:cookingbook_app/Utils/DialogMessage.dart';
+import 'package:cookingbook_app/Utils/Utils.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,7 +23,7 @@ class DetailRecetteDemo extends StatefulWidget {
 
 class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
   FirestoreService firestoreService = FirestoreService();
-  DialogMessage dialogMessage = DialogMessage();
+  Utils utils = Utils();
 
   final _formKey = GlobalKey<FormState>();
   List uniteDeMesures = ["Kg", "g", "L", "mL"];
@@ -43,7 +43,7 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
 
   //new valeur
   late Recette recette;
-  late String _nom;
+  // late String _nom;
   late String _instruction;
   late Duration _tempsPreparation;
   late String _nbPersonne;
@@ -52,10 +52,7 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
   late String _imageFilePath;
   File? _imageFile;
   bool _isEditMode = false;
-
-  Future<String> uploadImageToFirebase(File imageFile) async {
-    return await firestoreService.uploadImageToFirebase(imageFile);
-  }
+  bool _isExpanded = false;
 
   Future<void> updateRecette(
     String idRecette, {
@@ -77,14 +74,6 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
         ingredients: ingredients);
   }
 
-  void _showCameraPermissionDeniedDialogNew(BuildContext context) {
-    dialogMessage.showCameraPermissionDeniedDialog(context);
-  }
-
-  void _showStoragePermissionDeniedDialog(BuildContext context) {
-    dialogMessage.showStoragePermissionDeniedDialog(context);
-  }
-
   void _extractIngredients(Map<String, String> ingredients) {
     ingredients.forEach((nom, quantiteUnite) {
       var quantiteUniteSplit = quantiteUnite.split(' ');
@@ -100,6 +89,12 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
   void _toggleEditMode() {
     setState(() {
       _isEditMode = !_isEditMode;
+    });
+  }
+
+  void _toggleExpansion() {
+    setState(() {
+      _isExpanded = !_isExpanded;
     });
   }
 
@@ -142,7 +137,7 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
 
       if (status != PermissionStatus.granted) {
         // Si la permission est refusée, affichez un message d'erreur
-        _showCameraPermissionDeniedDialogNew(context);
+        utils.showCameraPermissionDeniedDialog(context);
         return;
       }
     } else if (source == ImageSource.gallery) {
@@ -155,7 +150,7 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
 
       if (status != PermissionStatus.granted) {
         // Si la permission est refusée, affichez un message d'erreur
-        _showStoragePermissionDeniedDialog(context);
+        utils.showStoragePermissionDeniedDialog(context);
         return;
       }
     }
@@ -164,10 +159,6 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
-
-        print("this is image path_____________ ${_imageFile!.path}");
-        // _recette.image = pickedFile.path;
-        print("Votre image : ${pickedFile.path}");
       });
     }
   }
@@ -250,7 +241,9 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
                           if (_imageFile == null) {
                             newImage = recette.image;
                           } else {
-                            newImage = await uploadImageToFirebase(_imageFile!);
+                            newImage =
+                                await firestoreService.uploadImageToFirebase(
+                                    _imageFile!, 'recetteImages');
                           }
 
                           updateRecette(
@@ -376,13 +369,12 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
                       }
                       return null;
                     },
-                    onSaved: (value) => _nom = value!,
-                    onFieldSubmitted: (value) {
-                      setState(() {
-                        _nom = value;
-                        print("this is _nommmmmm $_nom");
-                      });
-                    },
+                    // onSaved: (value) => _nom = value!,
+                    // onFieldSubmitted: (value) {
+                    //   setState(() {
+                    //     _nom = value;
+                    //   });
+                    // },
                   ),
                 ),
               ]),
@@ -626,16 +618,6 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
               SizedBox(
                 height: 10,
               ),
-              Container(
-                child: Text("Commentaires"),
-                //commentaire
-                width: 250,
-                height: 45,
-                decoration: BoxDecoration(
-                  shape: BoxShape.rectangle,
-                  color: Colors.grey[300],
-                ),
-              ),
             ],
           ),
         ),
@@ -649,6 +631,9 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
+            SizedBox(
+              height: 16,
+            ),
             Container(
               //image
               child: AspectRatio(
@@ -664,123 +649,132 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
             SizedBox(
               height: 10,
             ),
-            Container(
-              //nom
-              width: 250,
-              height: 45,
-              decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                color: Colors.grey[300],
+            GestureDetector(
+              onTap: _toggleExpansion,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 120,
+                  ),
+                  Text('detail la recette'),
+                  Icon(
+                    _isExpanded ? Icons.expand_less : Icons.expand_more,
+                    size: 24,
+                  ),
+                ],
               ),
             ),
             SizedBox(
-              height: 10,
+              height: 16,
             ),
-            Container(
-              //categorie
-              width: 250,
-              height: 45,
-              decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                color: Colors.grey[300],
-              ),
+            Visibility(
+              visible: _isExpanded,
+              child: Column(children: [
+                Container(
+                  //nom
+                  width: 250,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    color: Colors.grey[300],
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  //categorie
+                  width: 250,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    color: Colors.grey[300],
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  //temps
+                  width: 250,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    color: Colors.grey[300],
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  //nb personne
+                  width: 250,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    color: Colors.grey[300],
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  //ingredients
+                  width: 250,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    color: Colors.grey[300],
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  //instruction
+                  width: 250,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    color: Colors.grey[300],
+                  ),
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+              ]),
+            ),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    //like button
+                  },
+                  child: Icon(Icons.favorite_border),
+                ),
+                SizedBox(
+                  width: 8,
+                ),
+                GestureDetector(
+                  onTap: () {
+                    // load full commentaire
+                  },
+                  child: Icon(Icons.comment_outlined),
+                ),
+              ],
             ),
             SizedBox(
-              height: 10,
+              height: 16,
             ),
             Container(
-              //temps
-              width: 250,
+              //Commentaire
+              width: 400,
               height: 45,
               decoration: BoxDecoration(
                 shape: BoxShape.rectangle,
                 color: Colors.grey[300],
               ),
             ),
-            SizedBox(
-              height: 10,
-            ),
-            Container(
-              //nb personne
-              width: 250,
-              height: 45,
-              decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                color: Colors.grey[300],
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Container(
-              //ingredients
-              width: 250,
-              height: 45,
-              decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                color: Colors.grey[300],
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Container(
-              //instruction
-              width: 250,
-              height: 45,
-              decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                color: Colors.grey[300],
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Container(
-              //commentaire
-              width: 250,
-              height: 45,
-              decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                color: Colors.grey[300],
-              ),
-            ),
-            // SizedBox(
-            //   height: 10,
-            // ),
-            // Container(
-            //   //categorie
-            //   width: 250,
-            //   height: 45,
-            //   decoration: BoxDecoration(
-            //     shape: BoxShape.rectangle,
-            //     color: Colors.blue[300],
-            //   ),
-            // ),
-            // SizedBox(
-            //   height: 10,
-            // ),
-            // Container(
-            //   //categorie
-            //   width: 250,
-            //   height: 45,
-            //   decoration: BoxDecoration(
-            //     shape: BoxShape.rectangle,
-            //     color: Colors.blue[300],
-            //   ),
-            // ),
-            // SizedBox(
-            //   height: 10,
-            // ),
-            // Container(
-            //   //categorie
-            //   width: 250,
-            //   height: 45,
-            //   decoration: BoxDecoration(
-            //     shape: BoxShape.rectangle,
-            //     color: Colors.blue[300],
-            //   ),
-            // ),
           ],
         ),
       ),

@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:cookingbook_app/screens/EmailVerificationDemo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import 'package:google_sign_in/google_sign_in.dart';
 
 class Authentication with ChangeNotifier {
@@ -83,27 +85,75 @@ class Authentication with ChangeNotifier {
 
   // sign with google
   Future signInWithGoogle() async {
-    final GoogleSignInAccount? googleSignInAccount =
-        await googleSignIn.signIn();
+    if (kIsWeb) {
+      // sign in with Google on web
+      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
 
-    final GoogleSignInAuthentication googleSignInAuthentication =
-        await googleSignInAccount!.authentication;
+      try {
+        final UserCredential userCredential =
+            await firebaseAuth.signInWithPopup(googleProvider);
 
-    final AuthCredential authCredential = GoogleAuthProvider.credential(
-        accessToken: googleSignInAuthentication.accessToken,
-        idToken: googleSignInAuthentication.idToken);
+        final User? user = userCredential.user;
+        assert(user!.uid != null);
 
-    final UserCredential userCredential =
-        await firebaseAuth.signInWithCredential(authCredential);
-    final User? user = userCredential.user;
-    assert(user!.uid != null);
+        userUid = user!.uid;
 
-    userUid = user!.uid;
+        print('Google User Uid => $userUid');
+      } catch (e) {
+        print('Error signing in with Google on web: $e');
+      }
+    } else {
+      // sign in with Google on Android
+      final GoogleSignInAccount? googleSignInAccount =
+          await googleSignIn.signIn();
 
-    print('Google User Uid => $userUid');
+      final GoogleSignInAuthentication googleSignInAuthentication =
+          await googleSignInAccount!.authentication;
+
+      final AuthCredential authCredential = GoogleAuthProvider.credential(
+          accessToken: googleSignInAuthentication.accessToken,
+          idToken: googleSignInAuthentication.idToken);
+
+      try {
+        final UserCredential userCredential =
+            await firebaseAuth.signInWithCredential(authCredential);
+
+        final User? user = userCredential.user;
+        assert(user!.uid != null);
+
+        userUid = user!.uid;
+
+        print('Google User Uid => $userUid');
+      } catch (e) {
+        print('Error signing in with Google on Android: $e');
+      }
+    }
 
     notifyListeners();
   }
+
+  // Future signInWithGoogle() async {
+  //   final GoogleSignInAccount? googleSignInAccount =
+  //       await googleSignIn.signIn();
+
+  //   final GoogleSignInAuthentication googleSignInAuthentication =
+  //       await googleSignInAccount!.authentication;
+
+  //   final AuthCredential authCredential = GoogleAuthProvider.credential(
+  //       accessToken: googleSignInAuthentication.accessToken,
+  //       idToken: googleSignInAuthentication.idToken);
+
+  //   final UserCredential userCredential =
+  //       await firebaseAuth.signInWithCredential(authCredential);
+  //   final User? user = userCredential.user;
+  //   assert(user!.uid != null);
+
+  //   userUid = user!.uid;
+
+  //   print('Google User Uid => $userUid');
+
+  //   notifyListeners();
+  // }
 
   Future onLogout(String signInMethod) async {
     print("this is signInMethode in onLogout $signInMethod");

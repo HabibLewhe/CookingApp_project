@@ -9,8 +9,7 @@ class Recette {
   String categorie;
   Map<String, String> ingredients;
 
-  // List<Commentaire> commentaires;
-  // List<String> likeur;
+  List<String> likeur;
 
   Recette({
     required this.idUser,
@@ -22,5 +21,22 @@ class Recette {
     required this.instruction,
     required this.ingredients,
     required this.categorie,
+    required this.likeur,
   });
+
+  void likeContent(String userId) {
+    if (!likeur.contains(userId)) {
+      likeur.add(userId);
+    }
+  }
+
+  void unlikeContent(String userId) {
+    if (likeur.contains(userId)) {
+      likeur.remove(userId);
+    }
+  }
+
+  bool isLikedByUser(String userId) {
+    return likeur.contains(userId);
+  }
 }

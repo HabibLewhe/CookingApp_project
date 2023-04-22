@@ -37,17 +37,10 @@ class _AllRecetteDemoState extends State<AllRecetteDemo> {
   // 2 methodes pour call des methodes dans FireStoreService
 
   Future<void> getMyRecettes() async {
-    List<Recette> recettes = await firestoreService
-        .getRecettes(); // for (Recette recette in recettes) {
-    //   print(recette.idRecette);
-    // }
+    List<Recette> recettes = await firestoreService.getRecettes();
     setState(() {
       allMyRecettes = recettes;
     });
-  }
-
-  Future<void> deteleRecette(String idRecette) async {
-    await firestoreService.deleteRecette(idRecette);
   }
 
   @override

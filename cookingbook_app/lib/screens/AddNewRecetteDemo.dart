@@ -8,12 +8,16 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
-import '../Utils/DialogMessage.dart';
+import '../Utils/Utils.dart';
 import '../models/Recette.dart';
 import '../services/Authentication.dart';
 import '../services/FireStoreService.dart';
 
 class AddNewRecetteDemo extends StatefulWidget {
+  final Function refreshDataAddNewRecette;
+  const AddNewRecetteDemo({Key? key, required this.refreshDataAddNewRecette})
+      : super(key: key);
+
   @override
   _AddNewRecetteDemoState createState() => _AddNewRecetteDemoState();
 }
@@ -21,9 +25,9 @@ class AddNewRecetteDemo extends StatefulWidget {
 class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
   Authentication auth = Authentication();
   FirestoreService firestoreService = FirestoreService();
-  DialogMessage dialogMessage = DialogMessage();
+  Utils utils = Utils();
   void _showCameraPermissionDeniedDialogNew(BuildContext context) {
-    dialogMessage.showCameraPermissionDeniedDialog(context);
+    utils.showCameraPermissionDeniedDialog(context);
   }
 
   bool _isMounted = false;
@@ -49,10 +53,6 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
       // recette.idRecette = uuid.v4();
       await firestoreService.addRecette(recette);
     }
-  }
-
-  Future<String> uploadImageToFirebase(File imageFile) async {
-    return await firestoreService.uploadImageToFirebase(imageFile);
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -473,7 +473,7 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
               ElevatedButton(
                 onPressed: () {
                   _submitForm();
-                  _navigateBack();
+                  // _navigateBack();
                   //Navigator.pop(context);
                 },
                 child: const Text('Créer'),
@@ -487,16 +487,13 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      //   content: Text("Created succesufully!"),
-      // ));
-
       _formKey.currentState!.save();
       Map<String, String> ingredients = {};
       String quantite;
       String nomIngredient;
       print("this is imageFile.path ${_imageFile!.path}");
-      String recetteImage = await uploadImageToFirebase(_imageFile!);
+      String recetteImage = await firestoreService.uploadImageToFirebase(
+          _imageFile!, 'recetteImages');
       print("this is recetteImage URL online $recetteImage");
       Duration recetteDuration =
           Duration(minutes: int.parse(_tempsPreparationController.text));
@@ -517,11 +514,15 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
           nbPersonne: _nbPersonneController.text,
           instruction: _instructionController.text,
           ingredients: ingredients,
-          categorie: _selectedCategorie);
-      addRecetteToFirestore(_recette);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Created succesufully!"),
-      ));
+          categorie: _selectedCategorie,
+          likeur: []);
+      addRecetteToFirestore(_recette).whenComplete(() async {
+        await widget.refreshDataAddNewRecette();
+      });
+      Navigator.pop(context);
+      // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      //   content: Text("Created succesufully!"),
+      // ));
       // Enregistrer la recette dans la base de données ou effectuer toute autre action requise
       // Utilisez simplement _recette pour accéder aux attributs de la recette que l'utilisateur vient de créer
     }

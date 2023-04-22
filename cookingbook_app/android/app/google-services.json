@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "139311884130-d1lhkmcj1afp64vh42q7pg9b32v7pnl3.apps.googleusercontent.com",
+          "client_id": "139311884130-8lghbfneiim8hf2o1njea2ii1j5tkrhf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cookingbook_app",
+            "certificate_hash": "074bad7e2d0a7b1f4239166239c098b27441712a"
+          }
+        },
+        {
+          "client_id": "139311884130-h3o1hultkqhgq8s40oqqt3a4fdi7gu5d.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -29,6 +37,13 @@
             {
               "client_id": "139311884130-d1lhkmcj1afp64vh42q7pg9b32v7pnl3.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "139311884130-or4s4am5mgof35llpdvmuhbm8evdp4g5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cookingbookApp"
+              }
             }
           ]
         }
