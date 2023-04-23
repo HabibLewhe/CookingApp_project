@@ -2,19 +2,25 @@ import 'dart:io';
 
 import 'package:cookingbook_app/Utils/Utils.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../models/Profile.dart';
 import '../models/Recette.dart';
 import '../services/FireStoreService.dart';
 
 class DetailRecetteDemo extends StatefulWidget {
+  final Profile profile;
   final Recette recette;
-  final Function refreshAllRecette;
+  final Function? refreshAllRecette;
 
   const DetailRecetteDemo(
-      {Key? key, required this.recette, required this.refreshAllRecette})
+      {Key? key,
+      required this.profile,
+      required this.recette,
+      this.refreshAllRecette = null})
       : super(key: key); // Modify this line
 
   @override
@@ -22,6 +28,7 @@ class DetailRecetteDemo extends StatefulWidget {
 }
 
 class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
+  User? user;
   FirestoreService firestoreService = FirestoreService();
   Utils utils = Utils();
 
@@ -53,6 +60,7 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
   File? _imageFile;
   bool _isEditMode = false;
   bool _isExpanded = false;
+  bool _isLiked = false;
 
   Future<void> updateRecette(
     String idRecette, {
@@ -215,6 +223,9 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
     _extractIngredients(_ingredients);
 
     _categorie = recette.categorie;
+    // _isLiked = widget.profile.hasLikedContent(recette);
+    _isLiked = widget.profile.hasLikedContent(recette);
+    user = FirebaseAuth.instance.currentUser;
   }
 
   @override
@@ -222,90 +233,100 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(_isEditMode ? "Modify The Information" : "Detail Recette"),
+        title: Text(_isEditMode ? "Modify The Information" : recette.nom),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 25.0),
             child: GestureDetector(
-              onTap: () {
-                _toggleEditMode();
+                onTap: () {
+                  _toggleEditMode();
 
-                // TODO : traiter appuie sur bouton edit
-              },
-              child: _isEditMode
-                  ? MaterialButton(
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          var ingredientsList = ingredientsListBuilder();
-                          String newImage = '';
-                          if (_imageFile == null) {
-                            newImage = recette.image;
-                          } else {
-                            newImage =
-                                await firestoreService.uploadImageToFirebase(
-                                    _imageFile!, 'recetteImages');
-                          }
+                  // TODO : traiter appuie sur bouton edit
+                },
+                child: widget.profile.idProfile == recette.idUser
+                    ? _isEditMode
+                        ? MaterialButton(
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate()) {
+                                var ingredientsList = ingredientsListBuilder();
+                                String newImage = '';
+                                if (_imageFile == null) {
+                                  newImage = recette.image;
+                                } else {
+                                  newImage = await firestoreService
+                                      .uploadImageToFirebase(
+                                          _imageFile!, 'recetteImages');
+                                }
 
-                          updateRecette(
-                            recette.idRecette,
-                            image: newImage,
-                            categorie: _categorie,
-                            nom: _nomController.text,
-                            tempsPreparation: Duration(
-                                minutes: int.parse(
-                                    _tempsPreparationController.text)),
-                            nbPersonne: _nbPersonneController.text,
-                            instruction: _instructionController.text,
-                            ingredients: ingredientsList,
-                          ).whenComplete(() async {
-                            await widget.refreshAllRecette();
-                            Navigator.pop(context);
-                          });
+                                updateRecette(
+                                  recette.idRecette,
+                                  image: newImage,
+                                  categorie: _categorie,
+                                  nom: _nomController.text,
+                                  tempsPreparation: Duration(
+                                      minutes: int.parse(
+                                          _tempsPreparationController.text)),
+                                  nbPersonne: _nbPersonneController.text,
+                                  instruction: _instructionController.text,
+                                  ingredients: ingredientsList,
+                                ).whenComplete(() async {
+                                  await widget.refreshAllRecette!();
+                                  Navigator.pop(context);
+                                });
+                              }
+                            },
+                            child: Icon(
+                              Icons.done,
+                              size: 30,
+                            ),
+                          )
+                        : Icon(
+                            Icons.edit,
+                            size: 30,
+                          )
+                    : Container()
 
-                          // if (_imageFile == null) {
-                          //   print(
-                          //       "this is recette image Old: ${recette.image}");
-                          // } else {
-                          //   print("this is ImagePathNew: ${_imageFile!.path}");
-                          // }
+                // child: _isEditMode
+                //     ? MaterialButton(
+                //         onPressed: () async {
+                //           if (_formKey.currentState!.validate()) {
+                //             var ingredientsList = ingredientsListBuilder();
+                //             String newImage = '';
+                //             if (_imageFile == null) {
+                //               newImage = recette.image;
+                //             } else {
+                //               newImage =
+                //                   await firestoreService.uploadImageToFirebase(
+                //                       _imageFile!, 'recetteImages');
+                //             }
 
-                          // print("_______________________________________");
-                          // print(
-                          //     "this is _nomController : ${_nomController.text}");
-                          // print("_______________________________________");
-                          // print("this is _nomController : ${_categorie}");
-                          // print("_______________________________________");
-                          // print(
-                          //     "this is _nombrePersonne: ${_nbPersonneController.text}");
-                          // print("_______________________________________");
-
-                          // for (int i = 0;
-                          //     i < _nomIngredientsController.length;
-                          //     i++) {
-                          //   print(
-                          //       "this is ___nomIngre: ${_nomIngredientsController[i].text}");
-                          //   print(
-                          //       "this is _quantiteIngredients: ${_quantiteController[i].text}");
-                          //   print("this is _quantiteIngredients: ${_unite[i]}");
-                          //   print("_______________________________________");
-                          // }
-                          // var ingredientsList = ingredientsListBuilder();
-                          // print("this is IngredientsList ${ingredientsList}");
-                          // print("_______________________________________");
-                          // print(
-                          //     "this is instruction: ${_instructionController.text}");
-                        }
-                      },
-                      child: Icon(
-                        Icons.done,
-                        size: 30,
-                      ),
-                    )
-                  : Icon(
-                      Icons.edit,
-                      size: 30,
-                    ),
-            ),
+                //             updateRecette(
+                //               recette.idRecette,
+                //               image: newImage,
+                //               categorie: _categorie,
+                //               nom: _nomController.text,
+                //               tempsPreparation: Duration(
+                //                   minutes: int.parse(
+                //                       _tempsPreparationController.text)),
+                //               nbPersonne: _nbPersonneController.text,
+                //               instruction: _instructionController.text,
+                //               ingredients: ingredientsList,
+                //             ).whenComplete(() async {
+                //               await widget.refreshAllRecette!();
+                //               Navigator.pop(context);
+                //             });
+                //           }
+                //         },
+                //         child: Icon(
+                //           Icons.done,
+                //           size: 30,
+                //         ),
+                //       )
+                //     : Icon(
+                //         Icons.edit,
+                //         size: 30,
+                //       ),
+                ),
           ),
         ],
       ),
@@ -746,12 +767,70 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
             ),
             Row(
               children: [
-                GestureDetector(
-                  onTap: () {
-                    //like button
-                  },
-                  child: Icon(Icons.favorite_border),
-                ),
+                MaterialButton(
+                    onPressed: () {
+                      if (_isLiked) {
+                        //deja like et re-cliquer pour action unlike
+
+                        setState(() {
+                          _isLiked = !_isLiked;
+                        });
+                        firestoreService.updateRecetteLikeur(
+                            recette.idRecette, false);
+                        //unlike : flag = false
+                        firestoreService.updateProfileLikedRecette(
+                            widget.profile.idProfile, recette.idRecette, false);
+                        // widget.profile.unlikeContent(recette);
+                        //update firebase
+                        //update recette.likeur
+                        //update profile.likedRecette
+                      } else {
+                        // action LIKE
+
+                        setState(() {
+                          _isLiked = !_isLiked;
+                        });
+                        firestoreService.updateRecetteLikeur(
+                            recette.idRecette, true);
+                        // like : flag action = true
+                        firestoreService.updateProfileLikedRecette(
+                            widget.profile.idProfile, recette.idRecette, true);
+                      }
+                    },
+                    child: _isLiked
+                        ? Icon(
+                            Icons.favorite,
+                            color: Colors.red,
+                          )
+                        : Icon(Icons.favorite_border)
+                    // child: FutureBuilder<bool>(
+                    //   future: firestoreService.isLike(
+                    //       widget.profile.idProfile, recette.idRecette),
+                    //   builder: (context, snapshot) {
+                    //     if (snapshot.hasData && snapshot.data!) {
+                    //       return Icon(
+                    //         Icons.favorite,
+                    //         color: Colors.red,
+                    //       );
+                    //     } else {
+                    //       return Icon(Icons.favorite_border);
+                    //     }
+                    //   },
+                    // ),
+                    // child: firestoreService.isLike(
+                    //         widget.profile.idProfile, recette.idRecette)
+                    //     ? Icon(
+                    //         Icons.favorite,
+                    //         color: Colors.red,
+                    //       )
+                    //     : Icon(Icons.favorite_border),
+                    ),
+                // GestureDetector(
+                //   onTap: () {
+                //     //like button
+                //   },
+                //   child: Icon(Icons.favorite_border),
+                // ),
                 SizedBox(
                   width: 8,
                 ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cookingbook_app/screens/EmailVerificationDemo.dart';
+import 'package:cookingbook_app/services/FireStoreService.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class Authentication with ChangeNotifier {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
+  final FirestoreService firestoreService = FirestoreService();
 
   late String userUid;
   String get getUserUid => userUid;
@@ -51,8 +53,16 @@ class Authentication with ChangeNotifier {
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: userEmail, password: password);
-      await Future.delayed(const Duration(seconds: 10));
-      print('');
+
+      if (!(await firestoreService
+          .doesProfileExist(userCredential.user!.uid))) {
+        await firestoreService.addProfile();
+      }
+      // if (!(await firestoreService
+      //     .isProfileExistWithId(userCredential.user!.uid))) {
+      //   print("vao thang duoiiiiiiiiiiiiiiiiiiiiiiii");
+      //   //firestoreService.addProfile();
+      // }
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
@@ -62,6 +72,7 @@ class Authentication with ChangeNotifier {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('The account already exists for that email.')));
       }
+
       return null;
     } catch (e) {
       debugPrint(e.toString());
@@ -70,18 +81,21 @@ class Authentication with ChangeNotifier {
   }
 
   //create an account
-  Future<UserCredential> createAccount(String email, String password) async {
-    UserCredential userCredential = await firebaseAuth
-        .createUserWithEmailAndPassword(email: email, password: password);
+  // Future<UserCredential> createAccount(String email, String password) async {
+  //   UserCredential userCredential = await firebaseAuth
+  //       .createUserWithEmailAndPassword(email: email, password: password);
 
-    User? user = userCredential.user;
-    userUid = user!.uid;
+  //   User? user = userCredential.user;
+  //   userUid = user!.uid;
 
-    print("Created account Uid => $userUid");
-    notifyListeners();
-    await userCredential.user!.sendEmailVerification();
-    return userCredential;
-  }
+  //   print("Created account Uid => $userUid");
+  //   if (!(await firestoreService.doesProfileExist(userUid))) {
+  //     firestoreService.addProfile();
+  //   }
+  //   notifyListeners();
+  //   await userCredential.user!.sendEmailVerification();
+  //   return userCredential;
+  // }
 
   // sign with google
   Future signInWithGoogle() async {
@@ -99,6 +113,9 @@ class Authentication with ChangeNotifier {
         userUid = user!.uid;
 
         print('Google User Uid => $userUid');
+        if (!(await firestoreService.doesProfileExist(userUid))) {
+          firestoreService.addProfile();
+        }
       } catch (e) {
         print('Error signing in with Google on web: $e');
       }
@@ -124,6 +141,9 @@ class Authentication with ChangeNotifier {
         userUid = user!.uid;
 
         print('Google User Uid => $userUid');
+        if (!(await firestoreService.doesProfileExist(userUid))) {
+          firestoreService.addProfile();
+        }
       } catch (e) {
         print('Error signing in with Google on Android: $e');
       }
@@ -156,12 +176,13 @@ class Authentication with ChangeNotifier {
   // }
 
   Future onLogout(String signInMethod) async {
-    print("this is signInMethode in onLogout $signInMethod");
-    if (signInMethod == "emailAndPassword") {
-      print("logout by email password");
+    signInMethod = signInMethod.trim();
+    // print("this is signInMethode in onLogout $signInMethod");
+    if (signInMethod == "emailPassword") {
+      // print("logout by email password");
       return firebaseAuth.signOut();
     } else if (signInMethod == "google") {
-      print("logout by google");
+      // print("logout by google");
       return googleSignIn.signOut();
     } else {
       print("error onLogout Methode Authentication.dart");

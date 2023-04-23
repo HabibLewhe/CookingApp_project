@@ -68,12 +68,12 @@ class _AllRecetteDemoState extends State<AllRecetteDemo> {
                   title: Text(recette.nom),
                   subtitle: Text(recette.categorie),
                   onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => DetailRecetteDemo(
-                            recette: recette, refreshAllRecette: refreshData),
-                      ),
-                    );
+                    // Navigator.of(context).push(
+                    //   MaterialPageRoute(
+                    //     builder: (context) => DetailRecetteDemo(profile: thi,
+                    //         recette: recette, refreshAllRecette: refreshData),
+                    //   ),
+                    // );
                   },
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,

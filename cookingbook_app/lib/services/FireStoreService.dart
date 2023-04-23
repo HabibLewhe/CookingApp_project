@@ -44,20 +44,29 @@ class FirestoreService {
     }
   }
 
-  Future<void> addProfile(Profile profile) async {
-    Uuid uuid = Uuid();
+  Future<void> addProfile() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      profile.idProfile = user.uid;
-      profile.idProfile = uuid.v4();
-      await profileCollection.doc(profile.idProfile.toString()).set({
-        'idUser': profile.idProfile,
+      await profileCollection.doc(user.uid).set({
         'imageAvatar':
             'https://firebasestorage.googleapis.com/v0/b/multidev-cookingbook.appspot.com/o/profileImages%2Fno-avatar.png?alt=media&token=d89cbaf6-494d-48cb-a7e2-55fe72412e4c',
         'pseudo': 'pseudo',
+        'likedRecette': [],
       });
     }
   }
+
+  Future<bool> doesProfileExist(String idUser) async {
+    DocumentSnapshot profileSnapshot =
+        await profileCollection.doc(idUser).get();
+    return profileSnapshot.exists;
+  }
+
+  // Future<bool> isProfileExistWithId(String documentId) async {
+  //   final DocumentReference docRef = profileCollection.doc(documentId);
+  //   final DocumentSnapshot docSnapshot = await docRef.get();
+  //   return docSnapshot.exists;
+  // }
 
   // Get all recettes belonging to current user
   // cRud
@@ -98,11 +107,6 @@ class FirestoreService {
     if (user != null) {
       DocumentSnapshot profileSnapshot =
           await profileCollection.doc(user.uid).get();
-      // DocumentSnapshot profileSnapshot = await profileCollection
-      //     .where('idUser', isEqualTo: user.uid)
-      //     .limit(1)
-      //     .get()
-      //     .then((value) => value.docs.first);
 
       if (profileSnapshot.exists) {
         Map<String, dynamic> data =
@@ -192,5 +196,140 @@ class FirestoreService {
       dataToUpdate['pseudo'] = pseudo;
     }
     await profileCollection.doc(idUser).update(dataToUpdate);
+  }
+
+  // Update the 'likeur' field of a recette document in Firestore
+// You can pass a 'like' boolean flag to indicate whether to add or remove the user's ID from the 'likeur' list
+// crUd
+  // Update the 'likeur' field of a recette document in Firestore
+// You can pass a 'like' boolean flag to indicate whether to add or remove the user's ID from the 'likeur' list
+// crUd
+  Future<void> updateRecetteLikeur(String idRecette, bool like) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentReference recetteRef = recetteCollection.doc(idRecette);
+      DocumentSnapshot recetteSnapshot = await recetteRef.get();
+
+      if (recetteSnapshot.exists) {
+        Map<String, dynamic>? data =
+            recetteSnapshot.data() as Map<String, dynamic>?;
+        if (data != null && data.containsKey('likeur')) {
+          List<String> likeur = List.from(data['likeur']);
+          if (like) {
+            // Add user ID to 'likeur' list
+            if (!likeur.contains(user.uid)) {
+              likeur.add(user.uid);
+            }
+          } else {
+            // Remove user ID from 'likeur' list
+            if (likeur.contains(user.uid)) {
+              likeur.remove(user.uid);
+            }
+          }
+
+          // Update 'likeur' field in Firestore
+          await recetteRef.update({'likeur': likeur});
+        }
+      }
+    }
+  }
+
+// crUd
+  Future<void> updateProfileLikedRecette(
+      String idProfile, String idRecette, bool like) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentReference profileRef = profileCollection.doc(idProfile);
+      DocumentSnapshot profileSnapshot = await profileRef.get();
+
+      if (profileSnapshot.exists) {
+        Map<String, dynamic>? data =
+            profileSnapshot.data() as Map<String, dynamic>?;
+        if (data != null && data.containsKey('likedRecette')) {
+          List<String> likedRecette = List.from(data['likedRecette']);
+          if (like) {
+            // Add recette ID to 'likedRecette' list
+            if (!likedRecette.contains(idRecette)) {
+              likedRecette.add(idRecette);
+            }
+          } else {
+            // Remove recette ID from 'likedRecette' list
+            if (likedRecette.contains(idRecette)) {
+              likedRecette.remove(idRecette);
+            }
+          }
+
+          // Update 'likedRecette' field in Firestore
+          await profileRef.update({'likedRecette': likedRecette});
+        }
+      }
+    }
+  }
+
+  Future<bool> isLike(String idProfile, String idRecette) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot profileSnapshot =
+          await profileCollection.doc(idProfile).get();
+
+      if (profileSnapshot.exists) {
+        Map<String, dynamic>? data =
+            profileSnapshot.data() as Map<String, dynamic>?;
+        if (data != null && data.containsKey('likedRecette')) {
+          List<String> likedRecette = List.from(data['likedRecette']);
+          return likedRecette.contains(idRecette);
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // search
+  Future<List<Profile>> getAllProfiles() async {
+    List<Profile> profiles = [];
+
+    QuerySnapshot querySnapshot = await profileCollection.get();
+
+    for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      Profile profile = Profile(
+        idProfile: doc.id,
+        imageAvatar: data['imageAvatar'],
+        pseudo: data['pseudo'],
+        likedRecette: (data['likedRecette'] != null)
+            ? List<String>.from(data['likedRecette'])
+            : [],
+      );
+      profiles.add(profile);
+    }
+
+    return profiles;
+  }
+
+  Future<List<Recette>> getAllRecettes() async {
+    List<Recette> recettes = [];
+
+    QuerySnapshot querySnapshot = await recetteCollection.get();
+
+    for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      Recette recette = Recette(
+        idUser: data['idUser'],
+        idRecette: doc.id,
+        image: data['image'],
+        categorie: data['categorie'],
+        nom: data['nom'],
+        tempsPreparation: Duration(minutes: data['tempsPreparation']),
+        nbPersonne: data['nbPersonne'],
+        instruction: data['instruction'],
+        ingredients: Map<String, String>.from(data['ingredients']),
+        likeur:
+            (data['likeur'] != null) ? List<String>.from(data['likeur']) : [],
+      );
+      recettes.add(recette);
+    }
+
+    return recettes;
   }
 }

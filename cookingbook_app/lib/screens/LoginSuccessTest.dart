@@ -1,5 +1,6 @@
 import 'package:cookingbook_app/screens/AllRecetteDemo.dart';
 import 'package:cookingbook_app/screens/HomeScreenDemo.dart';
+import 'package:cookingbook_app/screens/SearchScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cookingbook_app/screens/LoginScreenDemo.dart';
@@ -133,7 +134,7 @@ class _LoginSuccessTestState extends State<LoginSuccessTest> {
           ),
           Row(children: [
             SizedBox(
-              width: 50,
+              width: 20,
             ),
             Container(
               decoration: BoxDecoration(
@@ -159,7 +160,7 @@ class _LoginSuccessTestState extends State<LoginSuccessTest> {
               ),
             ),
             SizedBox(
-              width: 50,
+              width: 20,
             ),
             Container(
               decoration: BoxDecoration(
@@ -180,10 +181,24 @@ class _LoginSuccessTestState extends State<LoginSuccessTest> {
                 },
               ),
             ),
+            SizedBox(
+              width: 40,
+            ),
+            Container(
+              child: GestureDetector(
+                onTap: () {
+                  //search button
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (ctx) => SearchScreen()));
+                },
+                child: Icon(Icons.search),
+              ),
+            ),
           ]),
           SizedBox(
             height: 10,
           ),
+
           // Container(
           //   decoration: BoxDecoration(
           //     border: Border.all(
@@ -233,6 +248,7 @@ class _LoginSuccessTestState extends State<LoginSuccessTest> {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => DetailRecetteDemo(
+                                  profile: thisProfile!,
                                   recette: recette,
                                   refreshAllRecette: refreshDataMyRecettes),
                             ),
