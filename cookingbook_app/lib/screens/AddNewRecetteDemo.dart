@@ -515,7 +515,8 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
           instruction: _instructionController.text,
           ingredients: ingredients,
           categorie: _selectedCategorie,
-          likeur: []);
+          likeur: [],
+          commentaires: []);
       addRecetteToFirestore(_recette).whenComplete(() async {
         await widget.refreshDataAddNewRecette();
       });

@@ -1,6 +1,8 @@
+import 'package:cookingbook_app/models/Commentaire.dart';
+
 class Recette {
   String idUser;
-  String idRecette;
+  String idRecette; // documentID sur firebase
   String image;
   String nom;
   Duration tempsPreparation;
@@ -9,7 +11,8 @@ class Recette {
   String categorie;
   Map<String, String> ingredients;
 
-  List<String> likeur;
+  List<String> likeur; //id profile
+  List<String> commentaires; // id commentaire
 
   Recette({
     required this.idUser,
@@ -22,6 +25,7 @@ class Recette {
     required this.ingredients,
     required this.categorie,
     required this.likeur,
+    required this.commentaires,
   });
 
   void likeContent(String userId) {

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cookingbook_app/Utils/Utils.dart';
+import 'package:cookingbook_app/models/Commentaire.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -31,8 +32,10 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
   User? user;
   FirestoreService firestoreService = FirestoreService();
   Utils utils = Utils();
+  List<Commentaire> listCommentaire = [];
 
   final _formKey = GlobalKey<FormState>();
+  final _formKeyCmt = GlobalKey<FormState>();
   List uniteDeMesures = ["Kg", "g", "L", "mL"];
   List listeCategories = ["Entree", "Plat", "Dessert", "Boisson"];
   TextEditingController _nomController = TextEditingController();
@@ -40,6 +43,7 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
   TextEditingController _tempsPreparationController = TextEditingController();
   TextEditingController _nbPersonneController = TextEditingController();
   TextEditingController _imageController = TextEditingController();
+  TextEditingController _commentaireController = TextEditingController();
 
   List<String> _nomIngre = [];
   List<String> _quantiteIngre = [];
@@ -208,6 +212,14 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
     return ingredientsList;
   }
 
+  Future<void> getCommentaire() async {
+    List<Commentaire> commentaires =
+        await firestoreService.getCommentaire(widget.recette.idRecette);
+    setState(() {
+      listCommentaire = commentaires;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -217,6 +229,7 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
         text: recette.tempsPreparation.inMinutes.toString());
     _instructionController = TextEditingController(text: recette.instruction);
     _nbPersonneController = TextEditingController(text: recette.nbPersonne);
+    _commentaireController = TextEditingController();
 
     _ingredients = recette.ingredients;
 
@@ -225,7 +238,7 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
     _categorie = recette.categorie;
     // _isLiked = widget.profile.hasLikedContent(recette);
     _isLiked = widget.profile.hasLikedContent(recette);
-    user = FirebaseAuth.instance.currentUser;
+    getCommentaire();
   }
 
   @override
@@ -284,49 +297,7 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
                             Icons.edit,
                             size: 30,
                           )
-                    : Container()
-
-                // child: _isEditMode
-                //     ? MaterialButton(
-                //         onPressed: () async {
-                //           if (_formKey.currentState!.validate()) {
-                //             var ingredientsList = ingredientsListBuilder();
-                //             String newImage = '';
-                //             if (_imageFile == null) {
-                //               newImage = recette.image;
-                //             } else {
-                //               newImage =
-                //                   await firestoreService.uploadImageToFirebase(
-                //                       _imageFile!, 'recetteImages');
-                //             }
-
-                //             updateRecette(
-                //               recette.idRecette,
-                //               image: newImage,
-                //               categorie: _categorie,
-                //               nom: _nomController.text,
-                //               tempsPreparation: Duration(
-                //                   minutes: int.parse(
-                //                       _tempsPreparationController.text)),
-                //               nbPersonne: _nbPersonneController.text,
-                //               instruction: _instructionController.text,
-                //               ingredients: ingredientsList,
-                //             ).whenComplete(() async {
-                //               await widget.refreshAllRecette!();
-                //               Navigator.pop(context);
-                //             });
-                //           }
-                //         },
-                //         child: Icon(
-                //           Icons.done,
-                //           size: 30,
-                //         ),
-                //       )
-                //     : Icon(
-                //         Icons.edit,
-                //         size: 30,
-                //       ),
-                ),
+                    : Container()),
           ),
         ],
       ),
@@ -802,41 +773,15 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
                             Icons.favorite,
                             color: Colors.red,
                           )
-                        : Icon(Icons.favorite_border)
-                    // child: FutureBuilder<bool>(
-                    //   future: firestoreService.isLike(
-                    //       widget.profile.idProfile, recette.idRecette),
-                    //   builder: (context, snapshot) {
-                    //     if (snapshot.hasData && snapshot.data!) {
-                    //       return Icon(
-                    //         Icons.favorite,
-                    //         color: Colors.red,
-                    //       );
-                    //     } else {
-                    //       return Icon(Icons.favorite_border);
-                    //     }
-                    //   },
-                    // ),
-                    // child: firestoreService.isLike(
-                    //         widget.profile.idProfile, recette.idRecette)
-                    //     ? Icon(
-                    //         Icons.favorite,
-                    //         color: Colors.red,
-                    //       )
-                    //     : Icon(Icons.favorite_border),
-                    ),
-                // GestureDetector(
-                //   onTap: () {
-                //     //like button
-                //   },
-                //   child: Icon(Icons.favorite_border),
-                // ),
+                        : Icon(Icons.favorite_border)),
                 SizedBox(
                   width: 8,
                 ),
                 GestureDetector(
                   onTap: () {
                     // load full commentaire
+                    print(
+                        "this is size of commentaire: ${listCommentaire.length}");
                   },
                   child: Icon(Icons.comment_outlined),
                 ),
@@ -847,12 +792,58 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
             ),
             Container(
               //Commentaire
-              width: 400,
+              width: 450,
               height: 45,
               decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                color: Colors.grey[300],
-              ),
+                  shape: BoxShape.rectangle,
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(5)),
+              child: Row(children: [
+                SizedBox(
+                  width: 16,
+                ),
+                Expanded(
+                  child: Form(
+                    key: _formKeyCmt,
+                    child: TextFormField(
+                      decoration: const InputDecoration(
+                        hintText: 'ajouter un commentaire ...',
+                      ),
+                      controller: _commentaireController,
+                      style: TextStyle(fontSize: 14, color: Colors.black),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "please enter a comment";
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    if (_formKeyCmt.currentState!.validate()) {
+                      Commentaire cmt = Commentaire(
+                          idUser: widget.profile.idProfile,
+                          content: _commentaireController.text,
+                          idRecette: widget.recette.idRecette,
+                          idCommentaire: '',
+                          dateTime: DateTime.now());
+                      firestoreService.addCommentaire(cmt, recette);
+                      print(
+                          "this is _commentaireController================== ${_commentaireController.text}");
+                    }
+                  },
+                  child: Icon(
+                    Icons.send,
+                    size: 25,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(
+                  width: 16,
+                )
+              ]),
             ),
           ],
         ),

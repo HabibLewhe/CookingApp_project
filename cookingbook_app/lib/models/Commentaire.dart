@@ -2,7 +2,7 @@ class Commentaire {
   String idUser; // idPrfile
   String content;
   String idRecette;
-  String idCommentaire;
+  String idCommentaire; // documentID sur firebase
   DateTime dateTime;
 
   Commentaire(

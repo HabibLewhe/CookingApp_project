@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cookingbook_app/models/Commentaire.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -20,6 +21,8 @@ class FirestoreService {
       FirebaseFirestore.instance.collection('recette');
   final CollectionReference profileCollection =
       FirebaseFirestore.instance.collection('profile');
+  final CollectionReference commentaireCollection =
+      FirebaseFirestore.instance.collection('commentaire');
 
   // Add a recette document to Firestore
   //Crud
@@ -92,12 +95,46 @@ class FirestoreService {
           ingredients: Map<String, String>.from(data['ingredients']),
           likeur:
               (data['likeur'] != null) ? List<String>.from(data['likeur']) : [],
+          commentaires: [],
         );
         recettes.add(recette);
       }
     }
 
     return recettes;
+  }
+
+  Future<List<Commentaire>> getCommentaire(String idRecette) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    List<Commentaire> commentaire = [];
+    List<String> commentaireIds = [];
+    if (user != null) {
+      DocumentSnapshot documentSnapshot =
+          await recetteCollection.doc(idRecette).get();
+      Map<String, dynamic> data =
+          documentSnapshot.data() as Map<String, dynamic>;
+      commentaireIds = (data['commentaires'] != null)
+          ? List<String>.from(data['commentaires'])
+          : [];
+
+      for (String id in commentaireIds) {
+        DocumentSnapshot documentSnapshotCmt =
+            (await commentaireCollection.doc(id).get());
+        Map<String, dynamic> data =
+            documentSnapshotCmt.data() as Map<String, dynamic>;
+
+        Timestamp timestamp = data['dateTime'];
+        Commentaire cmt = Commentaire(
+            idUser: data['idUser'],
+            content: data['content'],
+            idRecette: data['idRecette'],
+            idCommentaire: id,
+            dateTime: timestamp.toDate());
+        commentaire.add(cmt);
+      }
+    }
+
+    return commentaire;
   }
 
   Future<Profile> getCurrentUserProfile() async {
@@ -123,6 +160,60 @@ class FirestoreService {
       }
     }
     return profile;
+  }
+
+  Future<List<Recette>> getFavoritesRecettes() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    List<Recette> favRecettes = [];
+
+    List<String> likedRecette = [];
+
+    if (user != null) {
+      // on récupère le profile par son identifiant
+      // l'identifiant étant le même que l'utilisateur actuellement connecté
+      DocumentSnapshot querySnapshot =
+          (await profileCollection.doc(user.uid).get());
+
+      // on transforme le document en un map pour
+      // pouvoir parcourir les éléments
+      Map<String, dynamic> data = querySnapshot.data() as Map<String, dynamic>;
+
+      // on récupère la liste des recettes likées par l'utilisateur
+      // chaque recette étant représentée par son identifiant
+      likedRecette = (data['likedRecette'] != null)
+          ? List<String>.from(data['likedRecette'])
+          : [];
+
+      // on parcoures la liste
+      for (String likedRecetteId in likedRecette) {
+        // on récupère la recette par son identifiant
+        // on la formate en une instance de recette
+        DocumentSnapshot querySnapshot =
+            (await recetteCollection.doc(likedRecetteId).get());
+
+        Map<String, dynamic> data =
+            querySnapshot.data() as Map<String, dynamic>;
+        Recette recette = Recette(
+          idUser: data['idUser'],
+          idRecette: querySnapshot.id,
+          image: data['image'],
+          categorie: data['categorie'],
+          nom: data['nom'],
+          tempsPreparation: Duration(minutes: data['tempsPreparation']),
+          nbPersonne: data['nbPersonne'],
+          instruction: data['instruction'],
+          ingredients: Map<String, String>.from(data['ingredients']),
+          likeur:
+              (data['likeur'] != null) ? List<String>.from(data['likeur']) : [],
+          commentaires: (data['commentaires'] != null)
+              ? List<String>.from(data['commentaires'])
+              : [],
+        );
+        favRecettes.add(recette);
+      }
+    }
+
+    return favRecettes;
   }
 
   Future<String> uploadImageToFirebase(File imageFile, String folder) async {
@@ -198,11 +289,6 @@ class FirestoreService {
     await profileCollection.doc(idUser).update(dataToUpdate);
   }
 
-  // Update the 'likeur' field of a recette document in Firestore
-// You can pass a 'like' boolean flag to indicate whether to add or remove the user's ID from the 'likeur' list
-// crUd
-  // Update the 'likeur' field of a recette document in Firestore
-// You can pass a 'like' boolean flag to indicate whether to add or remove the user's ID from the 'likeur' list
 // crUd
   Future<void> updateRecetteLikeur(String idRecette, bool like) async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -326,10 +412,35 @@ class FirestoreService {
         ingredients: Map<String, String>.from(data['ingredients']),
         likeur:
             (data['likeur'] != null) ? List<String>.from(data['likeur']) : [],
+        commentaires: (data['commentaires'] != null)
+            ? List<String>.from(data['likeur'])
+            : [],
       );
       recettes.add(recette);
     }
 
     return recettes;
+  }
+
+  Future<void> addCommentaire(Commentaire commentaire, Recette recette) async {
+    Uuid uuid = Uuid();
+
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      commentaire.idUser = user.uid;
+      commentaire.idCommentaire = uuid.v4();
+      String idCommentaire = commentaire.idCommentaire;
+      await commentaireCollection
+          .doc(commentaire.idCommentaire.toString())
+          .set({
+        'idUser': commentaire.idUser,
+        'content': commentaire.content,
+        'idRecette': commentaire.idRecette,
+        'dateTime': commentaire.dateTime,
+      });
+      await recetteCollection.doc(recette.idRecette).update({
+        'commentaires': FieldValue.arrayUnion([idCommentaire])
+      });
+    }
   }
 }

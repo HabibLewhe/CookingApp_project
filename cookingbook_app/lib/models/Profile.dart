@@ -1,7 +1,7 @@
 import 'package:cookingbook_app/models/Recette.dart';
 
 class Profile {
-  String idProfile; // = idUser authentification
+  String idProfile; // = idUser = documentID sur firebase
 
   String imageAvatar;
   String pseudo;
