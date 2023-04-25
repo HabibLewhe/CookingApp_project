@@ -26,8 +26,7 @@ class Authentication with ChangeNotifier {
     // print("LOGIN SUCESSFULLY WITH Uid == $userUid");
     // notifyListeners();
     try {
-      UserCredential userCredential = await firebaseAuth
-          .signInWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
 
       User? user = userCredential.user;
       userUid = user!.uid;

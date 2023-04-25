@@ -1,3 +1,4 @@
+import 'package:cookingbook_app/login/login.dart';
 import 'package:cookingbook_app/screens/LoginScreenDemo.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
@@ -17,7 +18,7 @@ class _HomeScreenDemoState extends State<HomeScreenDemo> {
           Navigator.pushReplacement(
               context,
               PageTransition(
-                  child: LoginScreenDemo(),
+                  child: MyLogin(),
                   type: PageTransitionType.leftToRight))
         },
         child: Center(
