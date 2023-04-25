@@ -1,3 +1,4 @@
+import 'package:cookingbook_app/screens2/homescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../screens/LoginSuccessTest.dart';
@@ -95,7 +96,7 @@ class _MyLoginState extends State<MyLogin> {
                               Navigator.pushReplacement(
                               context,
                                PageTransition(
-                                  child: LoginSuccessTest(signInMethod: signInMethod),
+                                  child: Homescreen(signInMethod: signInMethod),
                                   type: PageTransitionType.bottomToTop));
                                 }
                               });
