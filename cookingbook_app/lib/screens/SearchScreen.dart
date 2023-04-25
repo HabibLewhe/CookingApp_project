@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/Commentaire.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
 import '../services/FireStoreService.dart';
@@ -14,6 +15,7 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Profile> _profiles = [];
   List<Recette> _recettes = [];
   List<dynamic> _searchResults = [];
+  FirestoreService firestoreService = FirestoreService();
 
   TextEditingController _searchController = TextEditingController();
 
@@ -60,6 +62,25 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _showRecetteDetails(Profile profile, Recette recette) async {
+    List<String> _listPseudoCmt = [];
+    List<Commentaire> listCommentaire = [];
+    List<Commentaire> commentaires =
+        await firestoreService.getCommentaire(recette.idRecette);
+
+    List<String> idsProfile = [];
+    for (Commentaire cmt in commentaires) {
+      idsProfile.add(cmt.idUser);
+    }
+    print("this is ID users : ${idsProfile.toString()}");
+    List<String> listPseudoCmt =
+        await firestoreService.getPseudosById(idsProfile);
+    print("_list listPseudoCmt ${listPseudoCmt.length}");
+    print("_list commentaires ${commentaires.length}");
+    setState(() {
+      _listPseudoCmt = listPseudoCmt;
+      listCommentaire = commentaires;
+    });
+
     // Navigate to the DetailRecetteDemo screen with the ID of the selected recette
     Navigator.push(
       context,
@@ -67,6 +88,8 @@ class _SearchScreenState extends State<SearchScreen> {
         builder: (context) => DetailRecetteDemo(
           profile: profile,
           recette: recette,
+          listCommentaires: listCommentaire,
+          listPseudos: _listPseudoCmt,
         ),
       ),
     );

@@ -21,6 +21,7 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
   TextEditingController userEmailController = TextEditingController();
   TextEditingController userPassWordConfirmController = TextEditingController();
   TextEditingController userPasswordController = TextEditingController();
+  TextEditingController pseudoNomController = TextEditingController();
   Authentication auth = Authentication();
   late String signInMethod;
 
@@ -101,28 +102,52 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
               ),
               GestureDetector(
                 onTap: () {
-                  auth.signInWithGoogle().whenComplete(() {
-                    setState(() {
-                      signInMethod = "google";
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Center(
-                            child: Text(
-                          "Login succes with Google Account ! ",
-                          textAlign: TextAlign.center,
-                        )),
-                        duration: Duration(seconds: 2),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-
-                    Navigator.pushReplacement(
-                        context,
-                        PageTransition(
-                            child: LoginSuccessTest(signInMethod: signInMethod),
-                            type: PageTransitionType.leftToRight));
+                  auth.signInWithGoogle().then((user) {
+                    if (user != null) {
+                      setState(() {
+                        signInMethod = "google";
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Center(
+                              child: Text(
+                            "Login succes with Google Account ! ",
+                            textAlign: TextAlign.center,
+                          )),
+                          duration: Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      Navigator.pushReplacement(
+                          context,
+                          PageTransition(
+                              child:
+                                  LoginSuccessTest(signInMethod: signInMethod),
+                              type: PageTransitionType.bottomToTop));
+                    }
                   });
+                  // auth.signInWithGoogle().whenComplete(() {
+                  //   setState(() {
+                  //     signInMethod = "google";
+                  //   });
+                  //   ScaffoldMessenger.of(context).showSnackBar(
+                  //     SnackBar(
+                  //       content: Center(
+                  //           child: Text(
+                  //         "Login succes with Google Account ! ",
+                  //         textAlign: TextAlign.center,
+                  //       )),
+                  //       duration: Duration(seconds: 2),
+                  //       behavior: SnackBarBehavior.floating,
+                  //     ),
+                  //   );
+
+                  //   Navigator.pushReplacement(
+                  //       context,
+                  //       PageTransition(
+                  //           child: LoginSuccessTest(signInMethod: signInMethod),
+                  //           type: PageTransitionType.leftToRight));
+                  // });
                 },
                 child: Icon(
                   EvaIcons.google,
@@ -154,15 +179,20 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 150.0),
-                      child: Divider(
-                        thickness: 4.0,
-                        color: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: TextField(
+                        controller: pseudoNomController,
+                        decoration: InputDecoration(
+                            hintText: 'Enter pseudo Nom...',
+                            hintStyle: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16.0)),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18.0),
                       ),
-                    ),
-                    CircleAvatar(
-                      backgroundColor: Colors.transparent,
-                      radius: 60.0,
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -233,6 +263,7 @@ class _LoginScreenDemoState extends State<LoginScreenDemo> {
                                   await auth.signUp(
                                       userEmail: userEmailController.text,
                                       password: userPasswordController.text,
+                                      pseudoNom: pseudoNomController.text,
                                       context: context);
                                   if (authFirebase.currentUser != null) {
                                     Navigator.push(

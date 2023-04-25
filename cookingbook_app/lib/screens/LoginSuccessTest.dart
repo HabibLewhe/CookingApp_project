@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:cookingbook_app/screens/LoginScreenDemo.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
+import '../models/Commentaire.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
 import '../services/Authentication.dart';
@@ -30,10 +31,18 @@ class _LoginSuccessTestState extends State<LoginSuccessTest> {
 
   late Profile? thisProfile;
   FirestoreService firestoreService = FirestoreService();
+
   Future<void> getCurrentUserProfile() async {
     Profile profile = await firestoreService.getCurrentUserProfile();
     setState(() {
       thisProfile = profile;
+    });
+  }
+
+  Future<void> getMyRecettes() async {
+    List<Recette> recettes = await firestoreService.getRecettes();
+    setState(() {
+      allMyRecettes = recettes;
     });
   }
 
@@ -54,13 +63,6 @@ class _LoginSuccessTestState extends State<LoginSuccessTest> {
   void refreshDataMyRecettes() {
     setState(() {
       fetchDataMyRecettes();
-    });
-  }
-
-  Future<void> getMyRecettes() async {
-    List<Recette> recettes = await firestoreService.getRecettes();
-    setState(() {
-      allMyRecettes = recettes;
     });
   }
 
@@ -198,28 +200,6 @@ class _LoginSuccessTestState extends State<LoginSuccessTest> {
           SizedBox(
             height: 10,
           ),
-
-          // Container(
-          //   decoration: BoxDecoration(
-          //     border: Border.all(
-          //       color: Colors.black, // Set the border color here
-          //       width: 2, // Set the border width here
-          //     ),
-          //     borderRadius:
-          //         BorderRadius.circular(8), // Set the border radius here
-          //   ),
-          //   child: MaterialButton(
-          //     child: Text(
-          //       "my recette",
-          //     ),
-          //     onPressed: () {
-          //       Navigator.push(
-          //           context,
-          //           MaterialPageRoute(
-          //               builder: (ctx) => const AllRecetteDemo()));
-          //     },
-          //   ),
-          // ),
           SizedBox(
             height: 20,
           ),
@@ -244,13 +224,33 @@ class _LoginSuccessTestState extends State<LoginSuccessTest> {
                         ),
                         title: Text(recette.nom),
                         subtitle: Text(recette.categorie),
-                        onTap: () {
+                        onTap: () async {
+                          List<String> _listPseudoCmt = [];
+                          List<Commentaire> listCommentaire = [];
+                          List<Commentaire> commentaires =
+                              await firestoreService
+                                  .getCommentaire(recette.idRecette);
+
+                          List<String> idsProfile = [];
+                          for (Commentaire cmt in commentaires) {
+                            idsProfile.add(cmt.idUser);
+                          }
+                          List<String> listPseudoCmt =
+                              await firestoreService.getPseudosById(idsProfile);
+
+                          setState(() {
+                            _listPseudoCmt = listPseudoCmt;
+                            listCommentaire = commentaires;
+                          });
+
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => DetailRecetteDemo(
                                   profile: thisProfile!,
                                   recette: recette,
-                                  refreshAllRecette: refreshDataMyRecettes),
+                                  refreshAllRecette: refreshDataMyRecettes,
+                                  listPseudos: _listPseudoCmt,
+                                  listCommentaires: listCommentaire),
                             ),
                           );
                         },

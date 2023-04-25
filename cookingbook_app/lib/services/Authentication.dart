@@ -49,14 +49,16 @@ class Authentication with ChangeNotifier {
   Future<User?> signUp(
       {required String userEmail,
       required String password,
+      required String pseudoNom,
       required BuildContext context}) async {
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: userEmail, password: password);
-
+      String imageDefault =
+          'https://firebasestorage.googleapis.com/v0/b/multidev-cookingbook.appspot.com/o/profileImages%2Fno-avatar.png?alt=media&token=d89cbaf6-494d-48cb-a7e2-55fe72412e4c';
       if (!(await firestoreService
           .doesProfileExist(userCredential.user!.uid))) {
-        await firestoreService.addProfile();
+        await firestoreService.addProfile(pseudoNom, imageDefault);
       }
       // if (!(await firestoreService
       //     .isProfileExistWithId(userCredential.user!.uid))) {
@@ -98,7 +100,8 @@ class Authentication with ChangeNotifier {
   // }
 
   // sign with google
-  Future signInWithGoogle() async {
+  Future<User?> signInWithGoogle() async {
+    User? user;
     if (kIsWeb) {
       // sign in with Google on web
       final GoogleAuthProvider googleProvider = GoogleAuthProvider();
@@ -107,15 +110,16 @@ class Authentication with ChangeNotifier {
         final UserCredential userCredential =
             await firebaseAuth.signInWithPopup(googleProvider);
 
-        final User? user = userCredential.user;
+        user = userCredential.user;
         assert(user!.uid != null);
 
         userUid = user!.uid;
 
         print('Google User Uid => $userUid');
         if (!(await firestoreService.doesProfileExist(userUid))) {
-          firestoreService.addProfile();
+          firestoreService.addProfile(user.displayName!, user.photoURL!);
         }
+        return user;
       } catch (e) {
         print('Error signing in with Google on web: $e');
       }
@@ -135,24 +139,26 @@ class Authentication with ChangeNotifier {
         final UserCredential userCredential =
             await firebaseAuth.signInWithCredential(authCredential);
 
-        final User? user = userCredential.user;
+        user = userCredential.user;
         assert(user!.uid != null);
 
         userUid = user!.uid;
 
         print('Google User Uid => $userUid');
         if (!(await firestoreService.doesProfileExist(userUid))) {
-          firestoreService.addProfile();
+          firestoreService.addProfile(user.displayName!, user.photoURL!);
         }
       } catch (e) {
         print('Error signing in with Google on Android: $e');
       }
     }
+    print(user);
+    return user;
 
     notifyListeners();
   }
 
-  // Future signInWithGoogle() async {
+  // Future<User> signInWithGoogleOld() async {
   //   final GoogleSignInAccount? googleSignInAccount =
   //       await googleSignIn.signIn();
 
@@ -166,6 +172,7 @@ class Authentication with ChangeNotifier {
   //   final UserCredential userCredential =
   //       await firebaseAuth.signInWithCredential(authCredential);
   //   final User? user = userCredential.user;
+
   //   assert(user!.uid != null);
 
   //   userUid = user!.uid;
@@ -173,6 +180,7 @@ class Authentication with ChangeNotifier {
   //   print('Google User Uid => $userUid');
 
   //   notifyListeners();
+  //   return user;
   // }
 
   Future onLogout(String signInMethod) async {

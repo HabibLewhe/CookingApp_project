@@ -47,13 +47,13 @@ class FirestoreService {
     }
   }
 
-  Future<void> addProfile() async {
+//'https://firebasestorage.googleapis.com/v0/b/multidev-cookingbook.appspot.com/o/profileImages%2Fno-avatar.png?alt=media&token=d89cbaf6-494d-48cb-a7e2-55fe72412e4c'
+  Future<void> addProfile(String nom, String image) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await profileCollection.doc(user.uid).set({
-        'imageAvatar':
-            'https://firebasestorage.googleapis.com/v0/b/multidev-cookingbook.appspot.com/o/profileImages%2Fno-avatar.png?alt=media&token=d89cbaf6-494d-48cb-a7e2-55fe72412e4c',
-        'pseudo': 'pseudo',
+        'imageAvatar': image,
+        'pseudo': nom,
         'likedRecette': [],
       });
     }
@@ -64,12 +64,6 @@ class FirestoreService {
         await profileCollection.doc(idUser).get();
     return profileSnapshot.exists;
   }
-
-  // Future<bool> isProfileExistWithId(String documentId) async {
-  //   final DocumentReference docRef = profileCollection.doc(documentId);
-  //   final DocumentSnapshot docSnapshot = await docRef.get();
-  //   return docSnapshot.exists;
-  // }
 
   // Get all recettes belonging to current user
   // cRud
@@ -160,6 +154,18 @@ class FirestoreService {
       }
     }
     return profile;
+  }
+
+  Future<List<String>> getPseudosById(List<String> idsProfile) async {
+    List<String> pseudos = [];
+    for (String id in idsProfile) {
+      DocumentSnapshot profileSnapshot = await profileCollection.doc(id).get();
+      Map<String, dynamic> data =
+          profileSnapshot.data() as Map<String, dynamic>;
+      pseudos.add(data['pseudo']);
+    }
+
+    return pseudos;
   }
 
   Future<List<Recette>> getFavoritesRecettes() async {

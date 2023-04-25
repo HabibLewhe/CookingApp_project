@@ -16,12 +16,16 @@ class DetailRecetteDemo extends StatefulWidget {
   final Profile profile;
   final Recette recette;
   final Function? refreshAllRecette;
+  final List<String> listPseudos;
+  final List<Commentaire> listCommentaires;
 
   const DetailRecetteDemo(
       {Key? key,
       required this.profile,
       required this.recette,
-      this.refreshAllRecette = null})
+      this.refreshAllRecette = null,
+      required this.listPseudos,
+      required this.listCommentaires})
       : super(key: key); // Modify this line
 
   @override
@@ -32,7 +36,6 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
   User? user;
   FirestoreService firestoreService = FirestoreService();
   Utils utils = Utils();
-  List<Commentaire> listCommentaire = [];
 
   final _formKey = GlobalKey<FormState>();
   final _formKeyCmt = GlobalKey<FormState>();
@@ -42,12 +45,8 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
   TextEditingController _instructionController = TextEditingController();
   TextEditingController _tempsPreparationController = TextEditingController();
   TextEditingController _nbPersonneController = TextEditingController();
-  TextEditingController _imageController = TextEditingController();
   TextEditingController _commentaireController = TextEditingController();
 
-  List<String> _nomIngre = [];
-  List<String> _quantiteIngre = [];
-  List<String> _uniteIngre = [];
   List<TextEditingController> _nomIngredientsController = [];
   List<TextEditingController> _quantiteController = [];
   List<String> _unite = [];
@@ -60,7 +59,6 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
   late String _nbPersonne;
   late String _categorie = widget.recette.categorie;
   late Map<String, String> _ingredients = {};
-  late String _imageFilePath;
   File? _imageFile;
   bool _isEditMode = false;
   bool _isExpanded = false;
@@ -212,14 +210,6 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
     return ingredientsList;
   }
 
-  Future<void> getCommentaire() async {
-    List<Commentaire> commentaires =
-        await firestoreService.getCommentaire(widget.recette.idRecette);
-    setState(() {
-      listCommentaire = commentaires;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
@@ -236,9 +226,8 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
     _extractIngredients(_ingredients);
 
     _categorie = recette.categorie;
-    // _isLiked = widget.profile.hasLikedContent(recette);
+
     _isLiked = widget.profile.hasLikedContent(recette);
-    getCommentaire();
   }
 
   @override
@@ -779,9 +768,12 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
                 ),
                 GestureDetector(
                   onTap: () {
+                    allCommentaires(context);
                     // load full commentaire
                     print(
-                        "this is size of commentaire: ${listCommentaire.length}");
+                        "this is size of commentaire: ${widget.listCommentaires!.length}");
+                    print(
+                        "this is size of _listPseudoCmt: ${widget.listPseudos!.length}");
                   },
                   child: Icon(Icons.comment_outlined),
                 ),
@@ -830,9 +822,10 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
                           idCommentaire: '',
                           dateTime: DateTime.now());
                       firestoreService.addCommentaire(cmt, recette);
-                      print(
-                          "this is _commentaireController================== ${_commentaireController.text}");
+                      widget.listCommentaires!.add(cmt);
+                      widget.listPseudos!.add(widget.profile.pseudo);
                     }
+                    _commentaireController.clear();
                   },
                   child: Icon(
                     Icons.send,
@@ -849,5 +842,49 @@ class _DetailRecetteDemoState extends State<DetailRecetteDemo> {
         ),
       ),
     );
+  }
+
+  allCommentaires(BuildContext context) {
+    return showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return Padding(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Container(
+                  height: MediaQuery.of(context).size.height * 0.50,
+                  width: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                      color: Colors.blueGrey,
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(12.0),
+                          topRight: Radius.circular(12.0))),
+                  child: widget.listCommentaires.length == 0 ||
+                          widget.listPseudos.length == 0
+                      ? Container()
+                      : ListView.builder(
+                          itemCount: widget.listCommentaires.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            Commentaire cmt = widget.listCommentaires[index];
+                            return ListTile(
+                              trailing: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.6,
+                                child: Row(children: [
+                                  Container(
+                                    child: Text(widget.listPseudos[index]),
+                                  ),
+                                  SizedBox(
+                                    width: 4,
+                                  ),
+                                  Container(
+                                    child: Text(cmt.content),
+                                  )
+                                ]),
+                              ),
+                            );
+                          },
+                        )));
+        });
   }
 }
