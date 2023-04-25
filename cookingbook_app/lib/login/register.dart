@@ -1,5 +1,7 @@
 
+import 'package:cookingbook_app/login/login.dart';
 import 'package:flutter/material.dart';
+import 'package:page_transition/page_transition.dart';
 
 class MyRegister extends StatefulWidget {
   const MyRegister({Key? key}) : super(key: key);
@@ -118,7 +120,12 @@ class _MyRegisterState extends State<MyRegister> {
                     children: [
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, 'login');
+                          Navigator.pushReplacement(
+                              context,
+                              PageTransition(
+                                  child:  MyLogin(),
+                                  type: PageTransitionType.rightToLeft,
+                                  duration: const Duration(milliseconds: 500)));
                         },
                         child: const Text(
                           'Login',

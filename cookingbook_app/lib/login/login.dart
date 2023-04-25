@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../screens/LoginSuccessTest.dart';
 import '../services/Authentication.dart';
+import 'register.dart';
 
 class MyLogin extends StatefulWidget {
   const MyLogin({Key? key}) : super(key: key);
@@ -112,7 +113,12 @@ class _MyLoginState extends State<MyLogin> {
                     children: [
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, 'register');
+                          Navigator.pushReplacement(
+                              context,
+                              PageTransition(
+                                  child:  MyRegister(),
+                                  type: PageTransitionType.leftToRight,
+                                  duration: const Duration(milliseconds: 500)));
                         },
                         child: const Text(
                           'Sign Up',
@@ -123,17 +129,7 @@ class _MyLoginState extends State<MyLogin> {
                           ),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text(
-                          'Forgot Password',
-                          style: TextStyle(
-                            decoration: TextDecoration.underline,
-                            fontSize: 18,
-                            color: Color(0xff4c505b),
-                          ),
-                        ),
-                      ),
+
                     ]),
               ]),
             ),
