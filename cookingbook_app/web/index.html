@@ -31,13 +31,40 @@
 
   <title>cookingbook_app</title>
   <link rel="manifest" href="manifest.json">
-
+  
+  <script>// Import the functions you need from the SDKs you need
+    import { initializeApp } from "firebase/app";
+    import { getAnalytics } from "firebase/analytics";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+    
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOBy3chI6rCGpHMoBCZKFRO4wPWm3n07I",
+      authDomain: "multidev-cookingbook.firebaseapp.com",
+      projectId: "multidev-cookingbook",
+      storageBucket: "multidev-cookingbook.appspot.com",
+      messagingSenderId: "139311884130",
+      appId: "1:139311884130:web:c2f22f5bb5914c44b3ee3b",
+      measurementId: "G-WE0532PT92"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+  <script src="flutter.js" defer></script>
   <script>
     // The value below is injected by flutter build, do not touch.
     var serviceWorkerVersion = null;
   </script>
+  <script type="text/javascript">
+    window.flutterWebRenderer = "html";
+  </script>
+
   <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js" defer></script>
+
 </head>
 <body>
   <script>
