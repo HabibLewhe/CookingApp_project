@@ -1,7 +1,7 @@
-import 'package:cookingbook_app/screens/SplashScreenDemo.dart';
-import 'package:cookingbook_app/Utils/FirebaseConstants.dart';
+import 'package:cookingbook_app/screens/SplashScreen.dart';
+import 'package:cookingbook_app/services/Authentication.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import '/firebase_options.dart';
 
 import 'package:flutter/material.dart';
@@ -15,29 +15,25 @@ void main() async {
   runApp(const MyApp());
 }
 
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   //await firebaseInitialization;
-//   await Firebase.initializeApp(
-//     options: DefaultFirebaseOptions.currentPlatform,
-//   );
-//   runApp(MyApp());
-// }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        canvasColor: Colors.transparent,
-        primarySwatch: Colors.blue,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => Authentication())
+      ],
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          canvasColor: Colors.transparent,
+          primarySwatch: Colors.blue,
+        ),
+        home: Splashscreen(),
+        debugShowCheckedModeBanner: false,
       ),
-      home: Splashscreen(),
-      debugShowCheckedModeBanner: false,
     );
   }
 }

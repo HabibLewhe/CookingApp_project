@@ -1,12 +1,14 @@
 class Commentaire {
   String idUser; // idPrfile
   String content;
-  String idCommentaire;
+  String idRecette;
+  String idCommentaire; // documentID sur firebase
   DateTime dateTime;
 
   Commentaire(
       {required this.idUser,
-      required this.content,
-      required this.idCommentaire,
-      required this.dateTime});
+        required this.content,
+        required this.idRecette,
+        required this.idCommentaire,
+        required this.dateTime});
 }

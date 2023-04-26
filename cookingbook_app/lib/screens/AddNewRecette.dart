@@ -1,29 +1,25 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:uuid/uuid.dart';
 
 import '../Utils/Utils.dart';
 import '../models/Recette.dart';
 import '../services/Authentication.dart';
 import '../services/FireStoreService.dart';
 
-class AddNewRecetteDemo extends StatefulWidget {
-  final Function refreshDataAddNewRecette;
+class AddNewRecette extends StatefulWidget {
 
-  const AddNewRecetteDemo({Key? key, required this.refreshDataAddNewRecette})
+  const AddNewRecette({Key? key,})
       : super(key: key);
 
   @override
-  _AddNewRecetteDemoState createState() => _AddNewRecetteDemoState();
+  _AddNewRecetteState createState() => _AddNewRecetteState();
 }
 
-class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
+class _AddNewRecetteState extends State<AddNewRecette> {
   Authentication auth = Authentication();
   FirestoreService firestoreService = FirestoreService();
   Utils utils = Utils();
@@ -51,8 +47,6 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
   Future<void> addRecetteToFirestore(Recette recette) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      // recette.idUser = user.uid;
-      // recette.idRecette = uuid.v4();
       await firestoreService.addRecette(recette);
     }
   }
@@ -216,6 +210,7 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.deepOrange,
         title: Text('Créer une recette'),
         actions: [
           IconButton(
@@ -243,7 +238,7 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
                                   _showImageSourceSelection(context),
                               child: const Icon(
                                 Icons.image,
-                                color: Colors.blue,
+                                color: Colors.deepOrange,
                               ),
                             ),
                             const Text('No image selected'),
@@ -289,7 +284,7 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
                       child: Text(category),
                     );
                   }).toList(),
-                  dropdownColor: Colors.amber,
+                  dropdownColor: Colors.white,
                   decoration: const InputDecoration(
                       labelText: "Catégorie de la recette",
                       prefixIcon: Icon(Icons.category),
@@ -385,6 +380,7 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
                           Expanded(
                             flex: 1,
                             child: DropdownButtonFormField(
+                              dropdownColor: Colors.white,
                               value: selectedVals[i],
                               items: uniteDeMesures
                                   .map((e) => DropdownMenuItem(
@@ -411,11 +407,11 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
                 child: const ListTile(
                   leading: Icon(
                     Icons.add_circle,
-                    color: Colors.blue,
+                    color: Colors.deepOrange,
                   ),
                   title: Text(
                     "ajouter un ingrédient",
-                    style: TextStyle(color: Colors.blue),
+                    style: TextStyle(color: Colors.deepOrange),
                   ),
                 ),
               ),
@@ -449,12 +445,12 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
       Map<String, String> ingredients = {};
       String quantite;
       String nomIngredient;
-      //print("this is imageFile.path ${_imageFile!.path}");
+      print("this is imageFile.path ${_imageFile!.path}");
       String recetteImage = await firestoreService.uploadImageToFirebase(
           _imageFile!, 'recetteImages');
-      //print("this is recetteImage URL online $recetteImage");
+      print("this is recetteImage URL online $recetteImage");
       Duration recetteDuration =
-          Duration(minutes: int.parse(_tempsPreparationController.text));
+      Duration(minutes: int.parse(_tempsPreparationController.text));
 
       for (int i = 0; i < _nomIngredientsController.length; i++) {
         quantite = "${_quantiteController[i].text} ${selectedVals[i]}";
@@ -473,12 +469,15 @@ class _AddNewRecetteDemoState extends State<AddNewRecetteDemo> {
           instruction: _instructionController.text,
           ingredients: ingredients,
           categorie: _selectedCategorie,
-          likeur: []);
-      addRecetteToFirestore(_recette).whenComplete(() async {
-        await widget.refreshDataAddNewRecette();
-      });
-
-      Navigator.pop(context);
+          likeur: [],
+          commentaires: []);
+      addRecetteToFirestore(_recette);
+      Navigator.of(context).pop();
+      // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      //   content: Text("Created succesufully!"),
+      // ));
+      // Enregistrer la recette dans la base de données ou effectuer toute autre action requise
+      // Utilisez simplement _recette pour accéder aux attributs de la recette que l'utilisateur vient de créer
     }
   }
 }

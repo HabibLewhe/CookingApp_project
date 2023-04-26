@@ -4,26 +4,24 @@ import 'package:cookingbook_app/Utils/Utils.dart';
 import 'package:cookingbook_app/services/FireStoreService.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../models/Profile.dart';
 
-class EditProfileDemo extends StatefulWidget {
+class EditProfile extends StatefulWidget {
   final Profile profile;
-  final Function refreshDataHomePage;
 
-  const EditProfileDemo(
-      {Key? key, required this.profile, required this.refreshDataHomePage})
+  const EditProfile(
+      {Key? key, required this.profile})
       : super(key: key);
 
   @override
-  _EditProfileDemoState createState() => _EditProfileDemoState();
+  _EditProfileState createState() => _EditProfileState();
 }
 
-class _EditProfileDemoState extends State<EditProfileDemo> {
+class _EditProfileState extends State<EditProfile> {
   TextEditingController _pseudoController = TextEditingController();
   FirestoreService firestoreService = FirestoreService();
   Utils utils = Utils();
@@ -107,10 +105,17 @@ class _EditProfileDemoState extends State<EditProfileDemo> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.deepOrange,
         title: const Text("Modifier Profile"),
         actions: [
           Padding(
@@ -133,7 +138,6 @@ class _EditProfileDemoState extends State<EditProfileDemo> {
                     pseudo: _pseudoController.text,
                   )
                       .whenComplete(() async {
-                    await widget.refreshDataHomePage();
                     Navigator.pop(context);
                   });
                 }
@@ -180,7 +184,7 @@ class _EditProfileDemoState extends State<EditProfileDemo> {
                       style: TextStyle(
                           //decoration: TextDecoration.underline,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue),
+                          color: Colors.deepOrange),
                     )),
                   ]),
                 ),

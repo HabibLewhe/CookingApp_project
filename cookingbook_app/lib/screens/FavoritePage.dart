@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../models/Profile.dart';
 import '../services/FireStoreService.dart';
+import 'DetailRecette.dart';
 
 class FavoritePage extends StatefulWidget {
   final Profile profile;
@@ -18,6 +19,7 @@ class FavoritePage extends StatefulWidget {
 }
 
 class _FavoritePageState extends State<FavoritePage> {
+
   bool isNotConnected() {
     return false;
   }
@@ -39,6 +41,12 @@ class _FavoritePageState extends State<FavoritePage> {
     getMyRecettes();
   }
 
+  @override
+  void dispose() {
+    recettesFavorites = [];
+    super.dispose();
+  }
+
   void toggleFavorite(Recette recette) {
     final isExist = recettesFavorites.contains(recette);
     if (isExist) {
@@ -51,6 +59,7 @@ class _FavoritePageState extends State<FavoritePage> {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
+        backgroundColor: Colors.deepOrange,
         title: const Text('Mes Favoris'),
       ),
       body: isNotConnected()
@@ -62,7 +71,7 @@ class _FavoritePageState extends State<FavoritePage> {
                 Container(
                   decoration: BoxDecoration(),
                   child: const Text(
-                    "Pour enregister et créer des recettes tu dois être connecté.",
+                    "Pour enregister et créer des recettes vous devez être connecté.",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -105,7 +114,15 @@ class _FavoritePageState extends State<FavoritePage> {
                   return Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ListTile(
-                      onTap: (){},
+                      onTap: (){
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => DetailRecette(
+                                recette: recette,
+                                profile: widget.profile),
+                          ),
+                        );
+                      },
                       leading: SizedBox(
                         child: CircleAvatar(
                           radius: 28,
@@ -129,8 +146,6 @@ class _FavoritePageState extends State<FavoritePage> {
                               widget.profile.idProfile,
                               recette.idRecette,
                               false);
-                          widget.profile.unlikeContent(recette);
-                          recette.unlikeContent(widget.profile.idProfile);
                           setState(() {
                             toggleFavorite(recette);
                           });

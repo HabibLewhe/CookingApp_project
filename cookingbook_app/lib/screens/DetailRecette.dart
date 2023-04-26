@@ -5,25 +5,21 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:readmore/readmore.dart';
 
+import '../models/Commentaire.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
 import '../services/FireStoreService.dart';
 
 class DetailRecette extends StatefulWidget {
-  final Profile profile;
-  final Recette recette;
-  final Function refreshAllRecette;
-  late int? getliked;
+  Profile profile;
+  Recette recette;
 
-    DetailRecette(
-      {Key? key,
-      required this.profile,
-      required this.recette,
-      required this.refreshAllRecette,
-        this.getliked})
-      : super(key: key); // Modify this line
+  DetailRecette({
+    Key? key,
+    required this.profile,
+    required this.recette,
+  }) : super(key: key); // Modify this line
 
   @override
   _DetailRecetteState createState() => _DetailRecetteState();
@@ -40,7 +36,7 @@ class _DetailRecetteState extends State<DetailRecette> {
   TextEditingController _instructionController = TextEditingController();
   TextEditingController _tempsPreparationController = TextEditingController();
   TextEditingController _nbPersonneController = TextEditingController();
-  TextEditingController _imageController = TextEditingController();
+  TextEditingController _commentaireController = TextEditingController();
 
   List<TextEditingController> _nomIngredientsController = [];
   List<TextEditingController> _quantiteController = [];
@@ -50,16 +46,35 @@ class _DetailRecetteState extends State<DetailRecette> {
   late Recette recette;
 
   // late String _nom;
-  late String _instruction;
   late Duration _tempsPreparation;
+  late String _instruction;
   late String _nbPersonne;
   late String _categorie = widget.recette.categorie;
   late Map<String, String> _ingredients = {};
-  late String _imageFilePath;
   File? _imageFile;
   bool _isEditMode = false;
   bool _isExpanded = false;
-  late bool _isLiked ;
+  late bool _isLiked;
+
+  List<String> pseudoListLocal = [];
+  late Map<Profile, Commentaire> commentListLocal;
+
+  late List<String> Idcommentaires = [];
+
+  Future<void> getAllIdComments() async {
+    Stream<List<String>> stream = firestoreService
+        .getCommentairesInRecetteRealTime(recette.idRecette);
+    stream.listen((List<String> commentaires) {
+      setState(() {
+        Idcommentaires = commentaires;
+
+        print("Idcommentaires : ${commentaires.length}");
+      });
+    });
+  }
+
+
+
 
   Future<void> updateRecette(
     String idRecette, {
@@ -79,6 +94,18 @@ class _DetailRecetteState extends State<DetailRecette> {
         nbPersonne: nbPersonne,
         instruction: instruction,
         ingredients: ingredients);
+  }
+
+  Future<void> getAllComments() async {
+    Stream<Map<Profile, Commentaire>> stream = firestoreService
+        .getCommentaireAndProfileInRecetteRealTime(recette.idRecette.trim());
+    stream.listen((Map<Profile, Commentaire> commentaires) {
+      setState(() {
+        commentListLocal = commentaires;
+
+        print("commentaires : ${commentaires.length}");
+      });
+    });
   }
 
   void _extractIngredients(Map<String, String> ingredients) {
@@ -106,12 +133,6 @@ class _DetailRecetteState extends State<DetailRecette> {
   void _toggleEditMode() {
     setState(() {
       _isEditMode = !_isEditMode;
-    });
-  }
-
-  void _toggleExpansion() {
-    setState(() {
-      _isExpanded = !_isExpanded;
     });
   }
 
@@ -221,6 +242,10 @@ class _DetailRecetteState extends State<DetailRecette> {
   void initState() {
     super.initState();
     recette = widget.recette;
+    Idcommentaires = [];
+    commentListLocal = {};
+    getAllIdComments();
+    getAllComments();
     _nomController = TextEditingController(text: recette.nom);
     _tempsPreparationController = TextEditingController(
         text: recette.tempsPreparation.inMinutes.toString());
@@ -236,7 +261,13 @@ class _DetailRecetteState extends State<DetailRecette> {
     _categorie = recette.categorie;
 
     _isLiked = widget.profile.hasLikedContent(recette);
-    print("_isLiked : ${_isLiked}");
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    commentListLocal = {};
+    super.dispose();
   }
 
   @override
@@ -295,7 +326,6 @@ class _DetailRecetteState extends State<DetailRecette> {
                             instruction: _instructionController.text,
                             ingredients: ingredientsList,
                           ).whenComplete(() async {
-                            await widget.refreshAllRecette();
                             Navigator.pop(context);
                           });
                         }
@@ -335,26 +365,26 @@ class _DetailRecetteState extends State<DetailRecette> {
                   child: Column(children: [
                     _imageFile == null
                         ? ClipRRect(
-                      borderRadius: BorderRadius.circular(26),
-                      child: Image.network(
-                        recette.image,
-                        width: 300,
-                        height: 200,
-                        fit: BoxFit.cover,
-                      ),
-                    )
+                            borderRadius: BorderRadius.circular(26),
+                            child: Image.network(
+                              recette.image,
+                              width: 300,
+                              height: 200,
+                              fit: BoxFit.cover,
+                            ),
+                          )
                         : Image.file(_imageFile!),
                     const SizedBox(
                       height: 16,
                     ),
                     RichText(
                         text: const TextSpan(
-                          text: "Modifier",
-                          style: TextStyle(
-                            //decoration: TextDecoration.underline,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue),
-                        )),
+                      text: "Modifier",
+                      style: TextStyle(
+                          //decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue),
+                    )),
                   ]),
                 ),
               ),
@@ -364,9 +394,7 @@ class _DetailRecetteState extends State<DetailRecette> {
               // le nom de la recette
               TextFormField(
                 controller: _nomController,
-                onTap: (){
-
-                },
+                onTap: () {},
                 decoration: const InputDecoration(
                     labelText: 'Nom de la  recette ',
                     prefixIcon: Icon(Icons.fastfood),
@@ -639,20 +667,13 @@ class _DetailRecetteState extends State<DetailRecette> {
                       //deja like et re-cliquer pour action unlike
                       setState(() {
                         _isLiked = !_isLiked;
-                        /*print(" 1 - Action dislike widget.getliked : ${widget.getliked}");
-                        widget.getliked = widget.getliked! - 1 ;
-                        print(" 2 - Action dislike widget.getliked : ${widget.getliked}");*/
                       });
                       firestoreService.updateRecetteLikeur(
                           recette.idRecette, false);
                       //unlike : flag = false
                       firestoreService.updateProfileLikedRecette(
                           widget.profile.idProfile, recette.idRecette, false);
-                      widget.profile.unlikeContent(recette);
-                      recette.unlikeContent(widget.profile.idProfile);
-
-                      await widget.refreshAllRecette();
-                    } else  {
+                    } else {
                       // action LIKE
 
                       setState(() {
@@ -667,10 +688,6 @@ class _DetailRecetteState extends State<DetailRecette> {
                       // like : flag action = true
                       firestoreService.updateProfileLikedRecette(
                           widget.profile.idProfile, recette.idRecette, true);
-                      widget.profile.likeContent(recette);
-                      recette.likeContent(widget.profile.idProfile);
-
-                      await widget.refreshAllRecette();
                     }
                   },
                   icon: _isLiked
@@ -698,6 +715,7 @@ class _DetailRecetteState extends State<DetailRecette> {
           IconButton(
             onPressed: () {
               // load full commentaire
+              allCommentaires(context);
             },
             icon: const Icon(Icons.comment_outlined),
           ),
@@ -716,5 +734,125 @@ class _DetailRecetteState extends State<DetailRecette> {
       ),
       _buildRecetteDescription(_ingredients),
     ]);
+  }
+
+/*  Future _showAllComment(){
+    return showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: builder
+    )
+  }*/
+
+  allCommentaires(BuildContext context) {
+    return showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return Padding(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Wrap(
+                children: [
+                  Container(
+                      height: 400,
+                      width: MediaQuery.of(context).size.width,
+                      decoration: const BoxDecoration(
+                          color: Colors.blueGrey,
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12.0),
+                              topRight: Radius.circular(12.0))),
+                      child: commentListLocal.isEmpty
+                          ? Container()
+                          : StreamBuilder<List<String>>(
+                              stream: firestoreService
+                                  .getCommentairesInRecetteRealTime(
+                                      recette.idRecette),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return const CircularProgressIndicator();
+                                }
+
+                               /* Map<Profile, Commentaire> commentListLocal =
+                                    snapshot.data!;*/
+                                List<MapEntry<Profile, Commentaire>>
+                                    commentListEntries =
+                                    commentListLocal.entries.toList();
+                                return ListView.builder(
+                                  itemCount: commentListLocal.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    Profile profile =
+                                        commentListEntries[index].key;
+                                    Commentaire cmt =
+                                        commentListEntries[index].value;
+                                    return ListTile(
+                                      trailing: SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.6,
+                                        child: Row(children: [
+                                          Text(profile.pseudo),
+                                          const SizedBox(
+                                            width: 4,
+                                          ),
+                                          Text(cmt.content)
+                                        ]),
+                                      ),
+                                    );
+                                  },
+                                );
+                              })),
+
+                  //////////
+                  Container(
+                    //Commentaire
+                    width: 450,
+                    height: 40,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(5)),
+                    child: Row(children: [
+                      const SizedBox(
+                        width: 16,
+                      ),
+                      Container(
+                        width: 300,
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            hintText: 'ajouter un commentaire ...',
+                          ),
+                          controller: _commentaireController,
+                          style: const TextStyle(
+                              fontSize: 14, color: Colors.black),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+
+                          Commentaire cmt = Commentaire(
+                              idUser: widget.profile.idProfile,
+                              content: _commentaireController.text,
+                              idRecette: widget.recette.idRecette,
+                              idCommentaire: '',
+                              dateTime: DateTime.now());
+                          firestoreService.addCommentaire(cmt, recette);
+                          _commentaireController.clear();
+                        },
+                        child: Icon(
+                          Icons.send,
+                          size: 25,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 16,
+                      )
+                    ]),
+                  ),
+                ],
+              ));
+        });
   }
 }

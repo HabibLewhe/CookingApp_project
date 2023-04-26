@@ -1,10 +1,14 @@
-import 'package:cookingbook_app/screens/EmailVerificationDemo.dart';
-import 'package:cookingbook_app/screens/UserAccountHomePage.dart';
+import 'package:cookingbook_app/screens/EmailVerification.dart';
+import 'package:cookingbook_app/screens/UserAccountPage.dart';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:cookingbook_app/services/Authentication.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:cookingbook_app/Utils/FirebaseConstants.dart';
+
+import '../models/Profile.dart';
+import '../services/FireStoreService.dart';
+import 'Home.dart';
 
 class LoginScreenForm extends StatefulWidget {
   @override
@@ -13,12 +17,15 @@ class LoginScreenForm extends StatefulWidget {
 
 class _LoginScreenFormState extends State<LoginScreenForm> {
   TextEditingController userEmailController = TextEditingController();
+  TextEditingController pseudoNomController = TextEditingController();
   TextEditingController userPassWordConfirmController = TextEditingController();
   TextEditingController userPasswordController = TextEditingController();
   Authentication auth = Authentication();
   late String signInMethod;
 
   bool _isLoading = false;
+
+  FirestoreService firestoreService = FirestoreService();
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +61,7 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                       userPasswordController.text.isNotEmpty) {
                     auth
                         .logIntoAccount(userEmailController.text,
-                        userPasswordController.text)
+                            userPasswordController.text)
                         .then((success) {
                       if (success) {
                         setState(() {
@@ -63,8 +70,8 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                         Navigator.pushReplacement(
                             context,
                             PageTransition(
-                                child: UserAccountPage(
-                                    signInMethod: signInMethod),
+                                child:
+                                    UserAccountPage(signInMethod: signInMethod),
                                 type: PageTransitionType.bottomToTop));
                       }
                     }).catchError((error) {
@@ -95,7 +102,7 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
               ),
               GestureDetector(
                 onTap: () {
-                  auth.signInWithGoogle().whenComplete(() {
+                  auth.signInWithGoogle().whenComplete(() async {
                     setState(() {
                       signInMethod = "google";
                     });
@@ -103,9 +110,9 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                       const SnackBar(
                         content: Center(
                             child: Text(
-                              "Login succes with Google Account ! ",
-                              textAlign: TextAlign.center,
-                            )),
+                          "Login succes with Google Account ! ",
+                          textAlign: TextAlign.center,
+                        )),
                         duration: Duration(seconds: 2),
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -114,7 +121,8 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                     Navigator.pushReplacement(
                         context,
                         PageTransition(
-                            child: UserAccountPage(signInMethod: signInMethod),
+                            child: Home(
+                                signInMethod: signInMethod),
                             type: PageTransitionType.leftToRight));
                   });
                 },
@@ -136,19 +144,10 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
         builder: (context) {
           return Padding(
             padding: EdgeInsets.only(
-                bottom: MediaQuery
-                    .of(context)
-                    .viewInsets
-                    .bottom),
+                bottom: MediaQuery.of(context).viewInsets.bottom),
             child: Container(
-                height: MediaQuery
-                    .of(context)
-                    .size
-                    .height * 0.50,
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width,
+                height: MediaQuery.of(context).size.height * 0.50,
+                width: MediaQuery.of(context).size.width,
                 decoration: const BoxDecoration(
                     color: Colors.blueGrey,
                     borderRadius: BorderRadius.only(
@@ -156,16 +155,21 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                         topRight: Radius.circular(12.0))),
                 child: Column(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 150.0),
-                      child: Divider(
-                        thickness: 4.0,
-                        color: Colors.white,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: TextField(
+                        controller: pseudoNomController,
+                        decoration: const InputDecoration(
+                            hintText: 'Enter pseudo...',
+                            hintStyle: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16.0)),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18.0),
                       ),
-                    ),
-                    const CircleAvatar(
-                      backgroundColor: Colors.transparent,
-                      radius: 60.0,
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -223,40 +227,41 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                     _isLoading
                         ? const CircularProgressIndicator()
                         : ElevatedButton(
-                      onPressed: () async {
-                        setState(() {
-                          _isLoading = true;
-                        });
-                        if (userEmailController.text.isNotEmpty &&
-                            userPasswordController.text.isNotEmpty &&
-                            userPassWordConfirmController
-                                .text.isNotEmpty) {
-                          if (userPasswordController.text ==
-                              userPassWordConfirmController.text) {
-                            await auth.signUp(
-                                userEmail: userEmailController.text,
-                                password: userPasswordController.text,
-                                context: context);
-                            if (authFirebase.currentUser != null) {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          EmailVerificationScreen()));
-                            }
-                          } else {
-                            warningText(context,
-                                "Passwords do not match , re-type please");
-                          }
-                        } else {
-                          warningText(context, "Fill the champ");
-                        }
-                        setState(() {
-                          _isLoading = false;
-                        });
-                      },
-                      child: Text("Sign Up"),
-                    ),
+                            onPressed: () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              if (userEmailController.text.isNotEmpty &&
+                                  userPasswordController.text.isNotEmpty &&
+                                  userPassWordConfirmController
+                                      .text.isNotEmpty) {
+                                if (userPasswordController.text ==
+                                    userPassWordConfirmController.text) {
+                                  await auth.signUp(
+                                    pseudoNom: pseudoNomController.text,
+                                      userEmail: userEmailController.text,
+                                      password: userPasswordController.text,
+                                      context: context);
+                                  if (authFirebase.currentUser != null) {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                EmailVerificationScreen()));
+                                  }
+                                } else {
+                                  warningText(context,
+                                      "Passwords do not match , re-type please");
+                                }
+                              } else {
+                                warningText(context, "Fill the champ");
+                              }
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            },
+                            child: Text("Sign Up"),
+                          ),
                   ],
                 )),
           );
@@ -270,14 +275,8 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
           return Container(
             decoration: BoxDecoration(
                 color: Colors.black, borderRadius: BorderRadius.circular(15.0)),
-            height: MediaQuery
-                .of(context)
-                .size
-                .height * 0.1,
-            width: MediaQuery
-                .of(context)
-                .size
-                .width,
+            height: MediaQuery.of(context).size.height * 0.1,
+            width: MediaQuery.of(context).size.width,
             child: Center(
               child: Text(warning,
                   style: const TextStyle(

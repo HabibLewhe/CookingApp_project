@@ -1,64 +1,70 @@
+import 'package:cookingbook_app/screens/UserAccountPage.dart';
 import 'package:cookingbook_app/services/FireStoreService.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
+import 'FavoritePage.dart';
 import 'LoginScreenForm.dart';
 
-class MyHomePage extends StatefulWidget {
+class Home extends StatefulWidget {
   String? signInMethod;
 
-   MyHomePage({super.key,this.signInMethod=null});
+  Home({super.key, this.signInMethod});
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomeState createState() => _HomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomeState extends State<Home> {
   List categories = ["Entrée", "Plat", "Déssert", "Boisson"];
   User? user = FirebaseAuth.instance.currentUser;
+  //bool isMounted=false;
 
-  late List<Recette> allMyRecettes = [];
+  late List<Recette> allRecette;
   late List<Recette> recettesEntree = [];
   late List<Recette> recettesPlat = [];
   late List<Recette> recettesDessert = [];
   late List<Recette> recettesBoisson = [];
 
-
   FirestoreService firestoreService = FirestoreService();
 
-  Future<void> getMyRecettes() async {
-    List<Recette> recettes = await firestoreService.getAllRecettes();
-    setState(() {
-      allMyRecettes = recettes;
+  late Profile myProfileRealTime;
+
+  Future<void> getMyProfileRealTime() async {
+    Stream<Profile> stream = firestoreService.getCurrentUserProfileRealTime();
+    stream.listen((Profile profile) {
+      setState(() {
+        myProfileRealTime = profile;
+      });
     });
   }
 
-  Future<void> fetchDataMyRecettes() async {
-    await getMyRecettes();
-
-    recettesEntree = allMyRecettes
-        .where((recette) => recette.categorie == "Entree")
-        .toList();
-    recettesPlat = allMyRecettes
-        .where((recette) => recette.categorie == "Plat")
-        .toList();
-    recettesDessert = allMyRecettes
-        .where((recette) => recette.categorie == "Dessert")
-        .toList();
-    recettesBoisson = allMyRecettes
-        .where((recette) => recette.categorie == "Boisson")
-        .toList();
-
-    print("All recettes : ${allMyRecettes.length}");
-    print("All recettesPlat : ${recettesPlat.length}");
-    print("All recettesDessert : ${recettesDessert.length}");
-    print("All recettesBoisson : ${recettesBoisson.length}");
+  Future<void> getAllRecettesRealTime() async {
+    Stream<List<Recette>> stream = firestoreService.getAllRecettesRealTime();
+    stream.listen((List<Recette> recettes) {
+      setState(() {
+        allRecette = recettes;
+        recettesEntree = allRecette
+            .where((recette) => recette.categorie == "Entree")
+            .toList();
+        recettesPlat =
+            allRecette.where((recette) => recette.categorie == "Plat").toList();
+        recettesDessert = allRecette
+            .where((recette) => recette.categorie == "Dessert")
+            .toList();
+        recettesBoisson = allRecette
+            .where((recette) => recette.categorie == "Boisson")
+            .toList();
+      });
+    });
   }
 
   @override
   void initState() {
-    fetchDataMyRecettes();
+    getAllRecettesRealTime();
+    getMyProfileRealTime();
     super.initState();
   }
 
@@ -68,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text(
+        title: const Text(
           "Cooking Book",
           style: TextStyle(
             fontStyle: FontStyle.italic,
@@ -81,21 +87,38 @@ class _MyHomePageState extends State<MyHomePage> {
           IconButton(
             onPressed: () {
               // Ouvrir le profil utilisateur
-              Navigator.pushReplacement(
-                  context,
-                  PageTransition(
-                      child: LoginScreenForm(),
-                      type: PageTransitionType.leftToRight));
+              print("user uid ${user?.uid}");
+              if (user == null) {
+                Navigator.of(context).pop();
+                Navigator.push(
+                    context,
+                    PageTransition(
+                        child: LoginScreenForm(),
+                        type: PageTransitionType.rightToLeft,
+                        childCurrent: widget,
+                        duration: const Duration(milliseconds: 300)));
+              } else {
+                Navigator.push(
+                    context,
+                    //MaterialPageRoute(builder: (ctx) => UserAccountPage(signInMethod: 'emailAndPassword',)
+                    PageTransition(
+                        child: UserAccountPage(
+                          signInMethod: 'emailAndPassword',
+                        ),
+                        type: PageTransitionType.rightToLeft,
+                        childCurrent: widget,
+                        duration: const Duration(milliseconds: 300)));
+              }
             },
-            icon: Icon(Icons.person),
+            icon: const Icon(Icons.person),
             color: Colors.deepOrange,
           ),
         ],
       ),
       body: ListView(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
             child: Text(
               'Entrée',
               style: TextStyle(
@@ -105,26 +128,27 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          SizedBox(height: 8.0),
-          Container(
+          const SizedBox(height: 8.0),
+          SizedBox(
             height: 200.0,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: recettesEntree.length,
               itemBuilder: (BuildContext context, int index) {
+                print("user uid : ${user?.uid}");
                 late bool _isLiked;
-                if(user == null) {
-                    _isLiked = false;
+                if (user == null) {
+                  _isLiked = false;
                 } else {
-                    _isLiked = recettesEntree[index].isLikedByUser(user!.uid);
+                  _isLiked = recettesEntree[index].isLikedByUser(user!.uid);
                 }
                 return _buildEntreeItem(context, index, _isLiked);
               },
             ),
           ),
-          SizedBox(height: 16.0),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
+          const SizedBox(height: 16.0),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
             child: Text(
               'Plat',
               style: TextStyle(
@@ -134,15 +158,15 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          SizedBox(height: 8.0),
-          Container(
+          const SizedBox(height: 8.0),
+          SizedBox(
             height: 200.0,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: recettesPlat.length,
               itemBuilder: (BuildContext context, int index) {
                 late bool _isLiked;
-                if(user == null) {
+                if (user == null) {
                   _isLiked = false;
                 } else {
                   _isLiked = recettesPlat[index].isLikedByUser(user!.uid);
@@ -151,8 +175,8 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
             child: Text(
               'Dessert',
               style: TextStyle(
@@ -162,15 +186,15 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          SizedBox(height: 8.0),
-          Container(
+          const SizedBox(height: 8.0),
+          SizedBox(
             height: 200.0,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: recettesDessert.length,
               itemBuilder: (BuildContext context, int index) {
                 late bool _isLiked;
-                if(user == null) {
+                if (user == null) {
                   _isLiked = false;
                 } else {
                   _isLiked = recettesDessert[index].isLikedByUser(user!.uid);
@@ -179,8 +203,8 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
             child: Text(
               'Boisson',
               style: TextStyle(
@@ -190,20 +214,20 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          SizedBox(height: 8.0),
-          Container(
+          const SizedBox(height: 8.0),
+          SizedBox(
             height: 200.0,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: recettesBoisson.length,
               itemBuilder: (BuildContext context, int index) {
-                late bool _isLiked;
-                if(user == null) {
-                  _isLiked = false;
+                late bool isLiked;
+                if (user == null) {
+                  isLiked = false;
                 } else {
-                  _isLiked = recettesBoisson[index].isLikedByUser(user!.uid);
+                  isLiked = recettesBoisson[index].isLikedByUser(user!.uid);
                 }
-                return _buildBoissonItem(context, index, _isLiked);
+                return _buildBoissonItem(context, index, isLiked);
               },
             ),
           ),
@@ -218,11 +242,11 @@ class _MyHomePageState extends State<MyHomePage> {
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: GestureDetector(
-              child: Icon(Icons.home),
+              child: const Icon(Icons.home),
               onTap: () {
                 //Navigator.pushReplacement(
-                  //context,
-                  //MaterialPageRoute(builder: (context) => MyHomePage()),
+                //context,
+                //MaterialPageRoute(builder: (context) => MyHomePage()),
                 //);
               },
             ),
@@ -230,7 +254,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
             icon: GestureDetector(
-              child: Icon(Icons.search),
+              child: const Icon(Icons.search),
               onTap: () {
                 /*Navigator.pushReplacement(
                   context,
@@ -242,12 +266,17 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
             icon: GestureDetector(
-              child: Icon(Icons.favorite_border),
+              child: const Icon(Icons.favorite_border),
               onTap: () {
-                /*Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => FavoritePage()),
-                );*/
+                if (myProfileRealTime != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => FavoritePage(
+                              profile: myProfileRealTime,
+                            )),
+                  );
+                }
               },
             ),
             label: 'Favoris',
@@ -259,7 +288,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildEntreeItem(BuildContext context, int index,bool isLiked) {
+  Widget _buildEntreeItem(BuildContext context, int index, bool isLiked) {
     return GestureDetector(
       onTap: () {
         /*Navigator.push(
@@ -271,70 +300,68 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       child: Container(
         width: 150.0,
-        margin: EdgeInsets.symmetric(horizontal: 8.0),
+        margin: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Stack(
           children: [
-            recettesEntree.length == 0 ? Container() :
-            Container(
-              width: double.infinity,
-              height: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.0),
-                image: DecorationImage(
-                  image: NetworkImage(recettesEntree[index].image),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+            recettesEntree.isEmpty
+                ? Container()
+                : Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8.0),
+                      image: DecorationImage(
+                        image: NetworkImage(recettesEntree[index].image),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
             Positioned(
               top: 8.0,
               right: 8.0,
               child: Container(
                 width: 30.0,
                 height: 30.0,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
                 ),
                 child: MaterialButton(
-                  padding: EdgeInsets.all(0.0),
+                  padding: const EdgeInsets.all(0.0),
                   onPressed: () async {
                     if (user == null) {
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
                           return AlertDialog(
-                            title: Text("Confirmation"),
-                            content: Text("Voulez-vous être redirigé vers la page de connexion ?"),
+                            title: const Text("Confirmation"),
+                            content: const Text(
+                                "Voulez-vous être redirigé vers la page de connexion ?"),
                             actions: [
                               TextButton(
-                                child: Text("Non"),
+                                child: const Text("Non"),
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                 },
                               ),
                               TextButton(
-                                child: Text("Oui"),
+                                child: const Text("Oui"),
                                 onPressed: () {
                                   Navigator.of(context).pop();
-                                  Navigator.pushReplacement(
+                                  Navigator.push(
                                       context,
                                       PageTransition(
                                           child: LoginScreenForm(),
-                                          type: PageTransitionType.leftToRight
-                                      )
-                                  );
+                                          type: PageTransitionType.fade,
+                                          childCurrent: widget,
+                                          duration: const Duration(
+                                              milliseconds: 300)));
                                 },
                               ),
                             ],
                           );
                         },
                       );
-                      /*Navigator.pushReplacement(
-                          context,
-                          PageTransition(
-                              child: LoginScreenDemo(),
-                              type: PageTransitionType.leftToRight));*/
                     } else {
                       Profile profile =
                           await firestoreService.getCurrentUserProfile();
@@ -350,8 +377,8 @@ class _MyHomePageState extends State<MyHomePage> {
                             profile.idProfile,
                             recettesEntree[index].idRecette,
                             false);
-                        profile.unlikeContent(recettesEntree[index]);
-                        recettesEntree[index].unlikeContent(profile.idProfile);
+                        /*       profile.unlikeContent(recettesEntree[index]);
+                        recettesEntree[index].unlikeContent(profile.idProfile);*/
                       } else {
                         //action like
                         setState(() {
@@ -364,14 +391,14 @@ class _MyHomePageState extends State<MyHomePage> {
                             profile.idProfile,
                             recettesEntree[index].idRecette,
                             true);
-                        profile.likeContent(recettesEntree[index]);
-                        recettesEntree[index].likeContent(profile.idProfile);
+                        /*profile.likeContent(recettesEntree[index]);
+                        recettesEntree[index].likeContent(profile.idProfile);*/
                       }
                     }
                   },
                   child: isLiked
-                      ? Icon(Icons.favorite, size: 20, color: Colors.red)
-                      : Icon(
+                      ? const Icon(Icons.favorite, size: 20, color: Colors.red)
+                      : const Icon(
                           Icons.favorite_border,
                           color: Colors.deepOrange,
                           size: 20,
@@ -388,18 +415,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   borderRadius: BorderRadius.circular(8.0),
                   color: Colors.white.withOpacity(0.8),
                 ),
-                padding: EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       recettesEntree[index].nom,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
-                    SizedBox(height: 4.0),
+                    const SizedBox(height: 4.0),
                   ],
                 ),
               ),
@@ -410,7 +437,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildPlatItem(BuildContext context, int index,bool isLiked) {
+  Widget _buildPlatItem(BuildContext context, int index, bool isLiked) {
     return GestureDetector(
       onTap: () {
         /*Navigator.push(
@@ -422,7 +449,7 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       child: Container(
         width: 150.0,
-        margin: EdgeInsets.symmetric(horizontal: 8.0),
+        margin: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Stack(
           children: [
             Container(
@@ -442,12 +469,12 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Container(
                 width: 30.0,
                 height: 30.0,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
                 ),
                 child: MaterialButton(
-                  padding: EdgeInsets.all(0.0),
+                  padding: const EdgeInsets.all(0.0),
                   onPressed: () async {
                     if (user == null) {
                       Navigator.pushReplacement(
@@ -490,8 +517,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     }
                   },
                   child: isLiked
-                      ? Icon(Icons.favorite, size: 20, color: Colors.red)
-                      : Icon(
+                      ? const Icon(Icons.favorite, size: 20, color: Colors.red)
+                      : const Icon(
                           Icons.favorite_border,
                           color: Colors.deepOrange,
                           size: 20,
@@ -508,18 +535,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   borderRadius: BorderRadius.circular(8.0),
                   color: Colors.white.withOpacity(0.8),
                 ),
-                padding: EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       recettesPlat[index].nom,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
-                    SizedBox(height: 4.0),
+                    const SizedBox(height: 4.0),
                   ],
                 ),
               ),
@@ -530,7 +557,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildDessertItem(BuildContext context, int index,bool isLiked) {
+  Widget _buildDessertItem(BuildContext context, int index, bool isLiked) {
     return GestureDetector(
       onTap: () {
         /*Navigator.push(
@@ -542,7 +569,7 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       child: Container(
         width: 150.0,
-        margin: EdgeInsets.symmetric(horizontal: 8.0),
+        margin: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Stack(
           children: [
             Container(
@@ -562,12 +589,12 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Container(
                 width: 30.0,
                 height: 30.0,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
                 ),
                 child: MaterialButton(
-                  padding: EdgeInsets.all(0.0),
+                  padding: const EdgeInsets.all(0.0),
                   onPressed: () async {
                     if (user == null) {
                       Navigator.pushReplacement(
@@ -610,8 +637,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     }
                   },
                   child: isLiked
-                      ? Icon(Icons.favorite, size: 20, color: Colors.red)
-                      : Icon(
+                      ? const Icon(Icons.favorite, size: 20, color: Colors.red)
+                      : const Icon(
                           Icons.favorite_border,
                           color: Colors.deepOrange,
                           size: 20,
@@ -628,18 +655,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   borderRadius: BorderRadius.circular(8.0),
                   color: Colors.white.withOpacity(0.8),
                 ),
-                padding: EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       recettesDessert[index].nom,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
-                    SizedBox(height: 4.0),
+                    const SizedBox(height: 4.0),
                   ],
                 ),
               ),
@@ -650,7 +677,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildBoissonItem(BuildContext context, int index,bool isLiked) {
+  Widget _buildBoissonItem(BuildContext context, int index, bool isLiked) {
     return GestureDetector(
       onTap: () {
         /*Navigator.push(
@@ -662,7 +689,7 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       child: Container(
         width: 150.0,
-        margin: EdgeInsets.symmetric(horizontal: 8.0),
+        margin: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Stack(
           children: [
             Container(
@@ -682,12 +709,12 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Container(
                 width: 30.0,
                 height: 30.0,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
                 ),
                 child: MaterialButton(
-                  padding: EdgeInsets.all(0.0),
+                  padding: const EdgeInsets.all(0.0),
                   onPressed: () async {
                     if (user == null) {
                       Navigator.pushReplacement(
@@ -730,8 +757,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     }
                   },
                   child: isLiked
-                      ? Icon(Icons.favorite, size: 20, color: Colors.red)
-                      : Icon(
+                      ? const Icon(Icons.favorite, size: 20, color: Colors.red)
+                      : const Icon(
                           Icons.favorite_border,
                           color: Colors.deepOrange,
                           size: 20,
@@ -748,18 +775,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   borderRadius: BorderRadius.circular(8.0),
                   color: Colors.white.withOpacity(0.8),
                 ),
-                padding: EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       recettesBoisson[index].nom,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
-                    SizedBox(height: 4.0),
+                    const SizedBox(height: 4.0),
                   ],
                 ),
               ),
@@ -769,5 +796,4 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
 }

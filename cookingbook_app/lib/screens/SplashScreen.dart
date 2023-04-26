@@ -17,7 +17,7 @@ class _SplashscreenState extends State<Splashscreen> {
         () => Navigator.pushReplacement(
             context,
             PageTransition(
-                child: MyHomePage(),
+                child: Home(),
                 type: PageTransitionType.leftToRight)));
     super.initState();
   }

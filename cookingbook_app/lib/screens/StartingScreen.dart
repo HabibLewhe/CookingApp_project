@@ -2,12 +2,12 @@ import 'package:cookingbook_app/screens/LoginScreenForm.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 
-class HomeScreenDemo extends StatefulWidget {
+class StartingScreen extends StatefulWidget {
   @override
-  _HomeScreenDemoState createState() => _HomeScreenDemoState();
+  _StartingScreenState createState() => _StartingScreenState();
 }
 
-class _HomeScreenDemoState extends State<HomeScreenDemo> {
+class _StartingScreenState extends State<StartingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

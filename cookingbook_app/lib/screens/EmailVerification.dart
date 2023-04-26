@@ -4,8 +4,6 @@ import 'package:cookingbook_app/screens/LoginScreenForm.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../services/Authentication.dart';
-
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({Key? key}) : super(key: key);
 
@@ -51,9 +49,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       isEmailVerified = false;
       timer?.cancel();
     }
-    // print("no khong xac nhan da_______u");
-    // await Future.delayed(const Duration(seconds: 10));
-    // Navigator.pop(context);
   }
 
   @override
