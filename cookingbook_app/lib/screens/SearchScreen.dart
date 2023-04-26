@@ -14,9 +14,7 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Profile> _profiles = [];
   List<Recette> _recettes = [];
   List<dynamic> _searchResults = [];
-
   TextEditingController _searchController = TextEditingController();
-
   FirestoreService _firestoreService = FirestoreService();
   Profile? profile;
 

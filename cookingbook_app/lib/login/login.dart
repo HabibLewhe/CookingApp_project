@@ -2,6 +2,7 @@ import 'package:cookingbook_app/screens2/homescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../screens/LoginSuccessTest.dart';
+import '../screens2/home.dart';
 import '../services/Authentication.dart';
 import 'register.dart';
 
@@ -96,7 +97,7 @@ class _MyLoginState extends State<MyLogin> {
                               Navigator.pushReplacement(
                               context,
                                PageTransition(
-                                  child: Homescreen(signInMethod: signInMethod),
+                                  child: Home(signInMethod: signInMethod),
                                   type: PageTransitionType.bottomToTop));
                                 }
                               });
@@ -118,8 +119,10 @@ class _MyLoginState extends State<MyLogin> {
                               context,
                               PageTransition(
                                   child:  MyRegister(),
-                                  type: PageTransitionType.leftToRight,
-                                  duration: const Duration(milliseconds: 500)));
+                                  type: PageTransitionType.leftToRightJoined,
+                                  childCurrent: this.widget,
+                                  duration: const Duration(milliseconds: 1000)));
+
                         },
                         child: const Text(
                           'Sign Up',

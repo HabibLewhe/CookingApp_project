@@ -1,29 +1,30 @@
+import 'package:cookingbook_app/models/Profile.dart';
+import 'package:cookingbook_app/models/Recette.dart';
 import 'package:flutter/material.dart';
 
 import '../color.dart';
 
-class ExploreCart extends StatelessWidget {
-  final String image;
-  final String name;
-  final String subname;
-  final String userimage;
-  final String username;
-    
-  const ExploreCart({Key? key, required this.image, required this.name, required this.subname, required this.userimage, required this.username}) : super(key: key);
+class ExploreCart2 extends StatelessWidget {
+  final Recette recette;
+  final Profile profile;
+  final VoidCallback onTap;
+
+  const ExploreCart2({Key? key, required this.recette, required this.profile,required this.onTap}) : super(key: key);
+
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return GestureDetector(
+        onTap: onTap,
+        child: Padding(
       padding: const EdgeInsets.only(top:8.0),
       child: Stack(
         children: [
           SizedBox(
-          
             height: 130,
             width: MediaQuery.of(context).size.width,
             child: Column(
               children: [
-             
                 SizedBox(
                   height: 130,
                   width: MediaQuery.of(context).size.width,
@@ -38,7 +39,7 @@ class ExploreCart extends StatelessWidget {
                               borderRadius: BorderRadius.circular(18),
                               image:  DecorationImage(
                                   image: NetworkImage(
-                                    image,
+                                    recette.image,
                                   ),
                                   fit: BoxFit.cover)),
                         ),
@@ -62,7 +63,7 @@ class ExploreCart extends StatelessWidget {
                                         Padding(
                                           padding: const EdgeInsets.only(top:8.0,left: 8),
                                           child: Text(
-                                            name,
+                                            recette.nom,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: textColor, fontSize: 16),
@@ -71,7 +72,7 @@ class ExploreCart extends StatelessWidget {
                                         Padding(
                                           padding: const EdgeInsets.only(left: 8.0),
                                           child: Text(
-                                            subname,
+                                            recette.categorie,
                                             style: const TextStyle(
                                                 fontWeight: FontWeight.w500,
                                                 color: inActiveColor,
@@ -80,7 +81,6 @@ class ExploreCart extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                    const Icon(Icons.more_vert)
                                   ],
                                 ),
                                 const SizedBox(height:18 ,),
@@ -89,20 +89,20 @@ class ExploreCart extends StatelessWidget {
                                      CircleAvatar(
                                       radius: 16,
                                       backgroundImage: NetworkImage(
-                                          userimage),
+                                          profile.imageAvatar),
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.only(left: 8.0),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children:  [
-                                          Text(
-                                            username,
+                                          const Text(
+                                            "Chef",
                                             style:
                                                 const TextStyle(fontSize: 14, color: textColor),
                                           ),
-                                          const Text(
-                                            "Nutrition",
+                                           Text(
+                                            profile.pseudo,
                                             style:
                                                 TextStyle(fontSize: 13, color: labelColor),
                                           )
@@ -134,19 +134,20 @@ class ExploreCart extends StatelessWidget {
                           child: Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
+                              children:  [
                                 Icon(
-                                  Icons.heart_broken,
+                                  Icons.star,
                                   size: 15,
                                   color: Colors.black,
                                 ),
-                                Text("4.3")
+                                Text(recette.nbPersonne),
                               ],
                             ),
                           ),
                         ))
         ],
       ),
+     )
     );
   }
 }

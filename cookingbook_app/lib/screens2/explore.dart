@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../color.dart';
+import '../models/Profile.dart';
+import '../models/Recette.dart';
+import '../screens/DetailRecetteDemo.dart';
+import '../services/FireStoreService.dart';
 import '../utiles/catogories.dart';
 import '../utiles/explorecart.dart';
+import '../utiles/explorecart2.dart';
+import 'package:tuple/tuple.dart';
+
+import 'detailespage.dart';
 
 
 class Explore extends StatefulWidget {
@@ -12,10 +20,88 @@ class Explore extends StatefulWidget {
 }
 
 class _ExploreState extends State<Explore> {
+  List<Profile> _profiles = [];
+  List<Recette> _recettes = [];
+  List<Tuple2<Recette, Profile>> _searchResults = [];
+  Set<String> categories = Set<String>();
+  String selectedCategory = "";
+
+  TextEditingController _searchController = TextEditingController();
+  FirestoreService _firestoreService = FirestoreService();
+  Profile? profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    _profiles = await _firestoreService.getAllProfiles();
+    _recettes = await _firestoreService.getAllRecettes();
+    profile = await _firestoreService.getCurrentUserProfile();
+    //from all recettes get all categories
+    for (Recette recette in _recettes) {
+      categories.add(recette.categorie);
+    }
+
+    //add all recettes to search result
+    _performSearch("");
+  }
+  Profile _trouverProfile(String id) {
+    Profile profile = Profile(idProfile: "", pseudo: "", imageAvatar: "", likedRecette: []);
+    for (Profile profile in _profiles) {
+      if (profile.idProfile == id) {
+        return profile;
+      }
+    }
+    return profile;
+  }
+
+  void _performSearch(String searchText) {
+    List<Tuple2<Recette, Profile>> resultsTemps = [];
+    selectedCategory = searchText;
+
+    // Search for recettes that match the search text
+    for (Recette recette in _recettes) {
+      //si search text est vide on affiche tout
+      if (searchText.isEmpty) {
+          resultsTemps.add(Tuple2(recette, _trouverProfile(recette.idUser)));
+      } else
+
+      if (recette.nom.toLowerCase().contains(searchText.toLowerCase())) {
+        resultsTemps.add(Tuple2(recette, _trouverProfile(recette.idUser)));
+      } else if (recette.categorie.toLowerCase().contains(searchText.toLowerCase())) {
+        resultsTemps.add(Tuple2(recette, _trouverProfile(recette.idUser)));
+      }
+    }
+
+    // Update the search results with the new results
+    setState(() {
+      _searchResults = resultsTemps;
+    });
+  }
+
+  void _showRecetteDetails(Profile profile, Recette recette) async {
+    // Navigate to the DetailRecetteDemo screen with the ID of the selected recette
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Detailspage(
+          image: recette.image,
+          name: recette.nom,
+          username: profile.pseudo,
+          userimage: profile.imageAvatar
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: appBgColor,
         body: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -36,47 +122,24 @@ class _ExploreState extends State<Explore> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: SizedBox(
                          height: 45,
-                         width: MediaQuery.of(context).size.width*0.8,
-                        child: Center(
+                         width: MediaQuery.of(context).size.width*0.9,
+                          child: Center(
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: const [
-                                Icon(Icons.search,color: inActiveColor,),
-                                Padding(
-                                  padding: EdgeInsets.only(left:10.0),
-                                  child: Text("Search",style: TextStyle(fontSize: 15,color: inActiveColor,),),
-                                )
-                              ],
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (value) {
+                                _performSearch(value);
+                              },
+                              decoration: InputDecoration(
+                                hintText: "Search",
+                                border: InputBorder.none,
+                                suffixIcon: Icon(Icons.search),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left:10.0),
-                      child: Container(
-                            height: 35,
-                            width: 35,
-                            decoration: BoxDecoration(
-                              color: appBgColor,
-                              borderRadius: BorderRadius.circular(50),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: shadowColor.withOpacity(0.1),
-                                  spreadRadius: 1,
-                                  blurRadius: 1,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: SvgPicture.asset(
-                                "assets/icons/filter1.svg",
-                                height: 20,
-                                width: 20,
-                              ),
-                            )),
                     ),
                   ],
                 ),
@@ -85,28 +148,29 @@ class _ExploreState extends State<Explore> {
                  Padding(
                   padding: const EdgeInsets.only(top: 13.0,left: 10),
                   child: Row(
-                    children: const [
-                      Catogeries(
-                          color: primary,
-                          text: "Ramen",
-                          images: "assets/images/ramen.png"),
-                      Catogeries(
-                          color: cardColor,
-                          text: "Salad",
-                          images: "assets/images/salad.png"),
-                      Catogeries(
-                          color: cardColor,
-                          text: "Pizza",
-                          images: "assets/images/pizza.png"),
+                    //for all categories, create a category widget
+                    children: [
+                      for (String category in categories)
+                        Catogeries(
+                          color: selectedCategory == category ? primary : cardColor,
+                          text: category,
+                          images: "assets/images/ramen.png",
+                          onTap: () {
+                            _searchController.text = category;
+                            _performSearch(category);  },
+                        ),
                     ],
+
+
                   ),
                 ),
-      //              
-      const ExploreCart(image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MjB8fG1peCUyMHNhbGFkfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60",name: "Mix Sald",subname: "Salad",userimage: "https://images.unsplash.com/photo-1604004555489-723a93d6ce74?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8N3x8Z2lybHxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",username: "Liya"),
-      
-       const ExploreCart(image:"https://images.unsplash.com/photo-1512058564366-18510be2db19?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=872&q=80", name: "Rice pot",subname: "Hot-pot",userimage:"https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80",username: "Noona", ),
-       const ExploreCart(image: "https://images.unsplash.com/photo-1623595119708-26b1f7300075?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=383&q=80",name:"Ice Cream" ,subname: "Sweet",userimage:"https://images.unsplash.com/photo-1557862921-37829c790f19?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8bWFufGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60" ,username: "Yunish",),
-        const ExploreCart(image: "https://images.unsplash.com/photo-1581512798638-ebd32054b3b9?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8OHx8bWl4JTIwc2FsYWR8ZW58MHx8MHx8&auto=format&fit=crop&w=500&q=60",name: "4-season salad",subname: "Salad",userimage: "https://images.unsplash.com/photo-1581599129568-e33151627628?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8OHx8bWFufGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60",username: "Keto",),
+              //for all _searchResults, show a explore cart
+              for (Tuple2<Recette, Profile> tup in _searchResults)
+                ExploreCart2(
+                  profile: tup.item2,
+                  recette: tup.item1,
+                  onTap: () => _showRecetteDetails(tup.item2, tup.item1),
+                ),
             ],
           ),
         ),
@@ -114,3 +178,4 @@ class _ExploreState extends State<Explore> {
     );
   }
 }
+

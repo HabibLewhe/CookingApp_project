@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../color.dart';
@@ -6,7 +7,8 @@ import 'explore.dart';
 import 'homescreen.dart';
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  final String signInMethod ;
+  const Home({Key? key, required this.signInMethod}) : super(key: key);
 
   @override
   State<Home> createState() => _HomeState();
@@ -14,6 +16,14 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int index = 1;
+  String signInMethodTemps = "";
+
+  @override
+  void initState() {
+    pages.add( Explore());
+    pages.add( Homescreen(signInMethod: signInMethodTemps));
+    pages.add( Bookmark());
+  }
 
   void select(int page) {
     setState(() {
@@ -21,18 +31,13 @@ class _HomeState extends State<Home> {
     });
   }
 
-  List<Widget> pages = [
-    const Explore(),
-    const Homescreen(signInMethod: "null),"),
-const Bookmark()
-  ];
+  List<Widget> pages = [];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: pages[index],
       bottomNavigationBar: BottomNavigationBar(
           currentIndex: index,
-          
           onTap: select,
           selectedItemColor: primary,
           unselectedItemColor: inActiveColor,

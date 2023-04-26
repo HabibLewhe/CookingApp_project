@@ -124,8 +124,9 @@ class _MyRegisterState extends State<MyRegister> {
                               context,
                               PageTransition(
                                   child:  MyLogin(),
-                                  type: PageTransitionType.rightToLeft,
-                                  duration: const Duration(milliseconds: 500)));
+                                  type: PageTransitionType.rightToLeftJoined,
+                                  childCurrent: this.widget,
+                                  duration: const Duration(milliseconds: 1000)));
                         },
                         child: const Text(
                           'Login',

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+// import '../color.dart';
 import '../color.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
@@ -66,10 +66,14 @@ class _HomescreenState extends State<Homescreen> {
     fetchDataMyRecettes();
     super.initState();
   }
+  void _rien(){
+    print("rien");
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: appBgColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -113,17 +117,11 @@ class _HomescreenState extends State<Homescreen> {
                       height: 40,
                       width: 40,
                       decoration: BoxDecoration(
+                          color: appBgColor,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: inActiveColor)),
                       child: Center(
-                        // child: Badge(
-                        //   backgroundColor: Colors.red,
-                        //   child: SvgPicture.asset(
-                        //     "assets/icons/bell.svg",
-                        //     height: 24,
-                        //     width: 24,
-                        //   ),
-                        // ),
+
                         child: IconButton(
                           onPressed: () {
                             auth.onLogout(widget.signInMethod);
@@ -164,19 +162,22 @@ class _HomescreenState extends State<Homescreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 13.0),
                   child: Row(
-                    children: const [
+                    children:  [
                       Catogeries(
                           color: primary,
                           text: "Ramen",
-                          images: "assets/images/ramen.png"),
-                      Catogeries(
-                          color: cardColor,
-                          text: "Salad",
-                          images: "assets/images/salad.png"),
-                      Catogeries(
-                          color: cardColor,
-                          text: "Pizza",
-                          images: "assets/images/pizza.png"),
+                          images: "assets/images/ramen.png",
+                          onTap: () => _rien()),
+                        Catogeries(
+                            color: cardColor,
+                            text: "Salad",
+                            images: "assets/images/salad.png",
+                            onTap: () => _rien()),
+                        Catogeries(
+                            color: cardColor,
+                            text: "Pizza",
+                            images: "assets/images/pizza.png",
+                            onTap: () => _rien()),
                     ],
                   ),
                 ),

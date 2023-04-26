@@ -1,5 +1,7 @@
 import 'package:cookingbook_app/models/Commentaire.dart';
 
+import '../utiles/explorecart.dart';
+
 class Recette {
   String idUser;
   String idRecette; // documentID sur firebase
@@ -43,4 +45,5 @@ class Recette {
   bool isLikedByUser(String userId) {
     return likeur.contains(userId);
   }
+
 }

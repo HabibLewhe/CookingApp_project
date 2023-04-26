@@ -1,10 +1,10 @@
-import 'package:cookingbook_app/screens/SplashScreenDemo.dart';
-import 'package:cookingbook_app/Utils/FirebaseConstants.dart';
+import 'package:cookingbook_app/screens/HomeScreenDemo.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import '/firebase_options.dart';
 
 import 'package:flutter/material.dart';
+
+import 'login/login.dart';
 
 // void main() async {
 //   WidgetsFlutterBinding.ensureInitialized();
@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
         canvasColor: Colors.transparent,
         primarySwatch: Colors.blue,
       ),
-      home: Splashscreen(),
+      home: MyLogin(),
       debugShowCheckedModeBanner: false,
     );
   }

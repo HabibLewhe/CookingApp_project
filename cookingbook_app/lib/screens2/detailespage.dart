@@ -9,6 +9,7 @@ class Detailspage extends StatefulWidget {
   final String userimage;
   const Detailspage({Key? key, required this.image, required this.name, required this.username, required this.userimage}) : super(key: key);
 
+
   @override
   State<Detailspage> createState() => _DetailspageState();
 }
@@ -134,7 +135,7 @@ class _DetailspageState extends State<Detailspage> {
                                  border: Border.all(color:labelColor,width: 0.1 )
                               ),
                               child: Padding(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(3.0),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children:  [

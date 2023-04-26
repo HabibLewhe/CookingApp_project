@@ -4,12 +4,15 @@ import '../color.dart';
 class Catogeries extends StatelessWidget {
   final Color color;
   final String text;
-final String images;
-  const Catogeries({Key? key, required this.color, required this.text, required this.images}) : super(key: key);
+  final String images;
+  final VoidCallback onTap;
+  const Catogeries({Key? key, required this.color, required this.text, required this.images,required this.onTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return GestureDetector(
+        onTap: onTap,
+        child: Card(
       color: color,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SizedBox(
@@ -33,8 +36,9 @@ final String images;
               ],
             ),
           ),
-        ),
-      ),
+         ),
+       ),
+      )
     );
   }
 }

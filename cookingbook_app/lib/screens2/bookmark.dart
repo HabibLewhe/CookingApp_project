@@ -15,9 +15,9 @@ class _BookmarkState extends State<Bookmark> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: appBgColor,
       body: SafeArea(
         child: SingleChildScrollView(
-        
           child: Column(
             children: [
               Padding(
@@ -34,7 +34,7 @@ class _BookmarkState extends State<Bookmark> {
                             borderRadius: BorderRadius.circular(50),
                             boxShadow: const [
                               BoxShadow(
-                                color: Color.fromARGB(255, 230, 227, 227),
+                                color:Colors.white,
                                 spreadRadius: 1,
                                 blurRadius: 1,
                                 offset: Offset(0, 1),
