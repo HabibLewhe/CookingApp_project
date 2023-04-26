@@ -152,10 +152,9 @@ class Authentication with ChangeNotifier {
         print('Error signing in with Google on Android: $e');
       }
     }
+    notifyListeners();
     print(user);
     return user;
-
-    notifyListeners();
   }
 
   // Future<User> signInWithGoogleOld() async {
