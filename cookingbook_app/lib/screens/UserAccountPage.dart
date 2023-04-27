@@ -1,5 +1,7 @@
+import 'package:cookingbook_app/screens/DetailRecette.dart';
 import 'package:cookingbook_app/screens/FavoritePage.dart';
 import 'package:cookingbook_app/screens/Home.dart';
+import 'package:cookingbook_app/screens/SearchScreen.dart';
 import 'package:flutter/material.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
@@ -26,7 +28,6 @@ class _UserAccountPageState extends State<UserAccountPage> {
 
   int nbRecettes = 0;
   int allLikeRealTime = 0;
-  late int allLikes;
 
   FirestoreService firestoreService = FirestoreService();
 
@@ -122,7 +123,7 @@ class _UserAccountPageState extends State<UserAccountPage> {
             ),
           )
         : Flexible(
-      flex: 1,
+            flex: 1,
             child: StreamBuilder<List<Recette>>(
                 stream: firestoreService.getRecettesRealTime(),
                 builder: (context, snapshot) {
@@ -154,8 +155,8 @@ class _UserAccountPageState extends State<UserAccountPage> {
                             ),
                             title: Text(
                               "${recette.nom} - ${recette.categorie}",
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
@@ -364,10 +365,9 @@ class _UserAccountPageState extends State<UserAccountPage> {
         unselectedFontSize: 19,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: GestureDetector(
-              child: const Icon(Icons.home),
-              onTap: () {
-                Navigator.of(context).pop();
+            icon: IconButton(
+              icon: const Icon(Icons.home),
+              onPressed: () {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => Home()),
@@ -377,23 +377,23 @@ class _UserAccountPageState extends State<UserAccountPage> {
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: GestureDetector(
-              child: const Icon(Icons.search),
-              onTap: () {
-                /*Navigator.pushReplacement(
+            icon: IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => ResearchPage()),
-                );*/
+                  MaterialPageRoute(builder: (context) => const SearchScreen()),
+                );
               },
             ),
             label: 'Recherche',
           ),
           BottomNavigationBarItem(
-            icon: GestureDetector(
-              child: const Icon(Icons.favorite_border),
-              onTap: () {
+            icon: IconButton(
+              icon: const Icon(Icons.favorite_border),
+              onPressed: () {
                 if (myProfileRealTime != null) {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                         builder: (context) => FavoritePage(

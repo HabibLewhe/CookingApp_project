@@ -285,94 +285,78 @@ class FirestoreService {
     );
   }
 
-  Stream<List<String>> getCommentairesInRecetteRealTime(
-      String idRecette) async* {
-    print("helooo");
-    Stream<DocumentSnapshot> snapshots =
-    recetteCollection.doc(idRecette).snapshots();
+  Stream<Map<Profile, Commentaire>> getCommentaires(String recipeId) async* {
+    // Get the recipe document from Firebase
+    final recipeDoc =
+    FirebaseFirestore.instance.collection('recette').doc(recipeId);
+    final recipeSnap = await recipeDoc.get();
 
-    List<String> idCommentaires = [];
+    // Get the list of comment IDs from the recipe document
+    final commentIds = List<String>.from(recipeSnap.data()!['commentaires']);
 
-    await for (DocumentSnapshot doc in snapshots) {
+    // Get the comment documents from Firebase and build a map of Profile to Commentaire
+    final commentMap = Map<Profile, Commentaire>();
+    await Future.forEach(commentIds, (String commentId) async {
+      final commentDoc =
+      FirebaseFirestore.instance.collection('commentaire').doc(commentId);
+      final commentSnap = await commentDoc.get();
+      final commentData = commentSnap.data();
+      final comment = Commentaire(
+        idUser: commentData!['idUser'],
+        content: commentData['content'],
+        idRecette: commentData['idRecette'],
+        idCommentaire: commentId,
+        dateTime: commentData['dateTime'].toDate(),
+      );
 
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      final profileDoc =
+      FirebaseFirestore.instance.collection('profile').doc(comment.idUser);
+      final profileSnap = await profileDoc.get();
+      final profileData = profileSnap.data();
+      final profile = Profile(
+        idProfile: comment.idUser,
+        imageAvatar: profileData!['imageAvatar'],
+        pseudo: profileData['pseudo'],
+        likedRecette: List<String>.from(profileData['likedRecette']),
+      );
+      commentMap[profile] = comment;
+    });
 
-      //idCommentaires =  data['commentaires'] ?? [];
-      idCommentaires =  List<String>.from(data['commentaires']);
+    // Return the map of Profile to Commentaire
+
+    yield commentMap;
+  }
+
+  Future<void> deleteCommentaire(String idCommentaire) async {
+    try {
+      final QuerySnapshot querySnapshot =
+      await _firestore.collection('recette').get();
+
+      final WriteBatch batch = _firestore.batch();
+
+      querySnapshot.docs.forEach((doc) {
+        final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        if (data.containsKey('commentaires') &&
+            List<String>.from(data['commentaires']).contains(idCommentaire)) {
+          batch.update(doc.reference, {
+            'commentaires': FieldValue.arrayRemove([idCommentaire])
+          });
+        }
+      });
+
+      await batch.commit();
+      print('Successfully removed  idCommentaire commentaires Recette.');
+    } catch (e) {
+      print('Error removing  idCommentaire commentaires Recett: $e');
     }
-    print("Idcommentaires : ${idCommentaires.length}");
-    yield idCommentaires;
+
+    try {
+      await commentaireCollection.doc(idCommentaire).delete();
+      print("Successfully deleted commentaire ! ");
+    } catch (e) {
+      print('Error deleting commentaire : $e');
+    }
   }
-
-  Stream<Map<Profile, Commentaire>> getCommentaireAndProfileInRecetteRealTime(
-      String idRecette) {
-
-    //Stream<QuerySnapshot<Object?>> recetteStream = recetteCollection.doc(idRecette).snapshots();
-
-    //"f098a4c1-2a19-4656-b7be-8bb946a46411"
-    print("idrecette : $idRecette");
-    print("doc : ${recetteCollection.doc(idRecette).id}");
-
-    Stream<QuerySnapshot<Map<String, dynamic>>> snapshots =
-        recetteCollection.doc(idRecette).collection('commentaires').snapshots();
-    print("snapshots : ${snapshots.toList()}");
-
-
-    return snapshots.asyncMap((snapshot) async {
-
-
-      Map<Profile, Commentaire> commentaireAndProfile = {};
-
-      if (snapshot.docs.isEmpty) {
-        return commentaireAndProfile;
-      }
-
-      for (DocumentSnapshot documentSnapshotCmt in snapshot.docs) {
-
-        Map<String, dynamic> data =
-            documentSnapshotCmt.data() as Map<String, dynamic>;
-
-        Timestamp timestamp = data['dateTime'];
-        Commentaire cmt = Commentaire(
-            idUser: data['idUser'],
-            content: data['content'],
-            idRecette: data['idRecette'],
-            idCommentaire: documentSnapshotCmt.id,
-            dateTime: timestamp.toDate());
-
-        print("ToStriung on cmt : ${cmt.toString()}");
-        Profile profile = await getProfile(cmt.idUser);
-        commentaireAndProfile[profile] = cmt;
-      }
-      print("commentaireAndProfile : ${commentaireAndProfile.length}");
-      return commentaireAndProfile;
-    });
-  }
-
-/*  Stream<List<Commentaire>> getCommentaireInRecetteRealTime(String idRecette) {
-    User? user = FirebaseAuth.instance.currentUser;
-
-    Stream<QuerySnapshot> snapshots =
-    recetteCollection.doc(idRecette).collection('commentaires').snapshots();
-    return snapshots.map((snapshot) {
-      List<Commentaire> commentaire = [];
-      for (DocumentSnapshot documentSnapshotCmt in snapshot.docs) {
-        Map<String, dynamic> data =
-        documentSnapshotCmt.data() as Map<String, dynamic>;
-
-        Timestamp timestamp = data['dateTime'];
-        Commentaire cmt = Commentaire(
-            idUser: data['idUser'],
-            content: data['content'],
-            idRecette: data['idRecette'],
-            idCommentaire: documentSnapshotCmt.id,
-            dateTime: timestamp.toDate());
-        commentaire.add(cmt);
-
-      }
-      return commentaire;
-    });
-  }*/
 
   Future<String> uploadImageToFirebase(File imageFile, String folder) async {
     final now = DateTime.now();
@@ -587,35 +571,6 @@ class FirestoreService {
 
     return profiles;
   }
-
-/*  Future<List<Recette>> getAllRecettes() async {
-    List<Recette> recettes = [];
-
-    QuerySnapshot querySnapshot = await recetteCollection.get();
-
-    for (QueryDocumentSnapshot doc in querySnapshot.docs) {
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      Recette recette = Recette(
-        idUser: data['idUser'],
-        idRecette: doc.id,
-        image: data['image'],
-        categorie: data['categorie'],
-        nom: data['nom'],
-        tempsPreparation: Duration(minutes: data['tempsPreparation']),
-        nbPersonne: data['nbPersonne'],
-        instruction: data['instruction'],
-        ingredients: Map<String, String>.from(data['ingredients']),
-        likeur:
-        (data['likeur'] != null) ? List<String>.from(data['likeur']) : [],
-        commentaires: (data['commentaires'] != null)
-            ? List<String>.from(data['likeur'])
-            : [],
-      );
-      recettes.add(recette);
-    }
-
-    return recettes;
-  }*/
 
   Stream<List<Recette>> getAllRecettesRealTime() async* {
     Stream<QuerySnapshot> snapshots = recetteCollection.snapshots();

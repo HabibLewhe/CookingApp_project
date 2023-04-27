@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:cookingbook_app/Utils/Utils.dart';
+import 'package:cookingbook_app/screens/CommentairesPage.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../models/Commentaire.dart';
@@ -28,6 +30,7 @@ class DetailRecette extends StatefulWidget {
 class _DetailRecetteState extends State<DetailRecette> {
   FirestoreService firestoreService = FirestoreService();
   Utils utils = Utils();
+  late Profile profileThisPage;
 
   final _formKey = GlobalKey<FormState>();
   List uniteDeMesures = ["Kg", "g", "L", "mL"];
@@ -53,28 +56,25 @@ class _DetailRecetteState extends State<DetailRecette> {
   late Map<String, String> _ingredients = {};
   File? _imageFile;
   bool _isEditMode = false;
-  bool _isExpanded = false;
   late bool _isLiked;
+  late Map<Profile, Commentaire> commentaireMap;
 
   List<String> pseudoListLocal = [];
   late Map<Profile, Commentaire> commentListLocal;
 
   late List<String> Idcommentaires = [];
 
-  Future<void> getAllIdComments() async {
-    Stream<List<String>> stream = firestoreService
-        .getCommentairesInRecetteRealTime(recette.idRecette);
-    stream.listen((List<String> commentaires) {
+  Future<void> getCommentaireMap() async {
+    Stream<Map<Profile, Commentaire>> stream =
+        firestoreService.getCommentaires(recette.idRecette);
+    stream.listen((Map<Profile, Commentaire> commentaires) {
       setState(() {
-        Idcommentaires = commentaires;
+        commentaireMap = commentaires;
 
-        print("Idcommentaires : ${commentaires.length}");
+        print("commentaireMap : ${commentaireMap.length}");
       });
     });
   }
-
-
-
 
   Future<void> updateRecette(
     String idRecette, {
@@ -94,18 +94,6 @@ class _DetailRecetteState extends State<DetailRecette> {
         nbPersonne: nbPersonne,
         instruction: instruction,
         ingredients: ingredients);
-  }
-
-  Future<void> getAllComments() async {
-    Stream<Map<Profile, Commentaire>> stream = firestoreService
-        .getCommentaireAndProfileInRecetteRealTime(recette.idRecette.trim());
-    stream.listen((Map<Profile, Commentaire> commentaires) {
-      setState(() {
-        commentListLocal = commentaires;
-
-        print("commentaires : ${commentaires.length}");
-      });
-    });
   }
 
   void _extractIngredients(Map<String, String> ingredients) {
@@ -240,12 +228,14 @@ class _DetailRecetteState extends State<DetailRecette> {
 
   @override
   void initState() {
-    super.initState();
+    _tempsPreparation = const Duration();
+    _instruction = "";
     recette = widget.recette;
+    profileThisPage = widget.profile;
     Idcommentaires = [];
+    commentaireMap = {};
     commentListLocal = {};
-    getAllIdComments();
-    getAllComments();
+    getCommentaireMap();
     _nomController = TextEditingController(text: recette.nom);
     _tempsPreparationController = TextEditingController(
         text: recette.tempsPreparation.inMinutes.toString());
@@ -261,12 +251,21 @@ class _DetailRecetteState extends State<DetailRecette> {
     _categorie = recette.categorie;
 
     _isLiked = widget.profile.hasLikedContent(recette);
+    super.initState();
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
     commentListLocal = {};
+    _ingredients = {};
+    commentaireMap = {};
+    _nomIngredientsController = [];
+    _imageFile = File('');
+    _quantiteController = [];
+    _categorie = '';
+    _isLiked = false;
+    _unite = [];
     super.dispose();
   }
 
@@ -678,9 +677,6 @@ class _DetailRecetteState extends State<DetailRecette> {
 
                       setState(() {
                         _isLiked = !_isLiked;
-                        /*print(" 1 - Action like widget.getliked : ${widget.getliked}");
-                        widget.getliked = widget.getliked! + 1 ;
-                        print(" 2 - Action like widget.getliked : ${widget.getliked}");*/
                       });
 
                       firestoreService.updateRecetteLikeur(
@@ -710,17 +706,33 @@ class _DetailRecetteState extends State<DetailRecette> {
       const SizedBox(
         height: 8,
       ),
-      Row(
-        children: [
-          IconButton(
-            onPressed: () {
-              // load full commentaire
-              allCommentaires(context);
-            },
-            icon: const Icon(Icons.comment_outlined),
+      GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            PageTransition(
+                child: CommentairesPage(
+                  recette: recette,
+                  profile: profileThisPage,
+                ),
+                type: PageTransitionType.rightToLeft),
+          );
+        },
+        child: Row(children: [
+          const SizedBox(
+            width: 6,
           ),
-          const Text("15 commentaires"),
-        ],
+          const Icon(Icons.comment_outlined),
+          const SizedBox(
+            width: 6,
+          ),
+          commentaireMap.isEmpty
+              ? Text("${commentaireMap.length} commentaires.")
+              : Text(
+                  "cliquer pour voir ${commentaireMap.length} commentaires.",
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                ),
+        ]),
       ),
       const Padding(
         padding: EdgeInsets.all(8.0),
@@ -734,125 +746,5 @@ class _DetailRecetteState extends State<DetailRecette> {
       ),
       _buildRecetteDescription(_ingredients),
     ]);
-  }
-
-/*  Future _showAllComment(){
-    return showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        builder: builder
-    )
-  }*/
-
-  allCommentaires(BuildContext context) {
-    return showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (context) {
-          return Padding(
-              padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom),
-              child: Wrap(
-                children: [
-                  Container(
-                      height: 400,
-                      width: MediaQuery.of(context).size.width,
-                      decoration: const BoxDecoration(
-                          color: Colors.blueGrey,
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(12.0),
-                              topRight: Radius.circular(12.0))),
-                      child: commentListLocal.isEmpty
-                          ? Container()
-                          : StreamBuilder<List<String>>(
-                              stream: firestoreService
-                                  .getCommentairesInRecetteRealTime(
-                                      recette.idRecette),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return const CircularProgressIndicator();
-                                }
-
-                               /* Map<Profile, Commentaire> commentListLocal =
-                                    snapshot.data!;*/
-                                List<MapEntry<Profile, Commentaire>>
-                                    commentListEntries =
-                                    commentListLocal.entries.toList();
-                                return ListView.builder(
-                                  itemCount: commentListLocal.length,
-                                  itemBuilder:
-                                      (BuildContext context, int index) {
-                                    Profile profile =
-                                        commentListEntries[index].key;
-                                    Commentaire cmt =
-                                        commentListEntries[index].value;
-                                    return ListTile(
-                                      trailing: SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.6,
-                                        child: Row(children: [
-                                          Text(profile.pseudo),
-                                          const SizedBox(
-                                            width: 4,
-                                          ),
-                                          Text(cmt.content)
-                                        ]),
-                                      ),
-                                    );
-                                  },
-                                );
-                              })),
-
-                  //////////
-                  Container(
-                    //Commentaire
-                    width: 450,
-                    height: 40,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(5)),
-                    child: Row(children: [
-                      const SizedBox(
-                        width: 16,
-                      ),
-                      Container(
-                        width: 300,
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            hintText: 'ajouter un commentaire ...',
-                          ),
-                          controller: _commentaireController,
-                          style: const TextStyle(
-                              fontSize: 14, color: Colors.black),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-
-                          Commentaire cmt = Commentaire(
-                              idUser: widget.profile.idProfile,
-                              content: _commentaireController.text,
-                              idRecette: widget.recette.idRecette,
-                              idCommentaire: '',
-                              dateTime: DateTime.now());
-                          firestoreService.addCommentaire(cmt, recette);
-                          _commentaireController.clear();
-                        },
-                        child: Icon(
-                          Icons.send,
-                          size: 25,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 16,
-                      )
-                    ]),
-                  ),
-                ],
-              ));
-        });
   }
 }

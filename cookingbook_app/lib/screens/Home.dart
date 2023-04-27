@@ -1,3 +1,5 @@
+import 'package:cookingbook_app/screens/DetailRecette.dart';
+import 'package:cookingbook_app/screens/SearchScreen.dart';
 import 'package:cookingbook_app/screens/UserAccountPage.dart';
 import 'package:cookingbook_app/services/FireStoreService.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,6 +22,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   List categories = ["Entrée", "Plat", "Déssert", "Boisson"];
   User? user = FirebaseAuth.instance.currentUser;
+
   //bool isMounted=false;
 
   late List<Recette> allRecette;
@@ -240,36 +243,28 @@ class _HomeState extends State<Home> {
         selectedFontSize: 19,
         unselectedFontSize: 19,
         items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: GestureDetector(
-              child: const Icon(Icons.home),
-              onTap: () {
-                //Navigator.pushReplacement(
-                //context,
-                //MaterialPageRoute(builder: (context) => MyHomePage()),
-                //);
-              },
-            ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: GestureDetector(
-              child: const Icon(Icons.search),
-              onTap: () {
-                /*Navigator.pushReplacement(
+            icon: IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => ResearchPage()),
-                );*/
+                  MaterialPageRoute(builder: (context) => const SearchScreen()),
+                );
               },
             ),
             label: 'Recherche',
           ),
           BottomNavigationBarItem(
-            icon: GestureDetector(
-              child: const Icon(Icons.favorite_border),
-              onTap: () {
+            icon: IconButton(
+              icon: const Icon(Icons.favorite_border),
+              onPressed: () {
                 if (myProfileRealTime != null) {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                         builder: (context) => FavoritePage(
@@ -291,12 +286,15 @@ class _HomeState extends State<Home> {
   Widget _buildEntreeItem(BuildContext context, int index, bool isLiked) {
     return GestureDetector(
       onTap: () {
-        /*Navigator.push(
+        Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => RecipeDescription(recette: recettesEntree[index]),
+            builder: (context) => DetailRecette(
+              recette: recettesEntree[index],
+              profile: myProfileRealTime,
+            ),
           ),
-        );*/
+        );
       },
       child: Container(
         width: 150.0,
@@ -377,8 +375,6 @@ class _HomeState extends State<Home> {
                             profile.idProfile,
                             recettesEntree[index].idRecette,
                             false);
-                        /*       profile.unlikeContent(recettesEntree[index]);
-                        recettesEntree[index].unlikeContent(profile.idProfile);*/
                       } else {
                         //action like
                         setState(() {
@@ -391,8 +387,6 @@ class _HomeState extends State<Home> {
                             profile.idProfile,
                             recettesEntree[index].idRecette,
                             true);
-                        /*profile.likeContent(recettesEntree[index]);
-                        recettesEntree[index].likeContent(profile.idProfile);*/
                       }
                     }
                   },
@@ -440,12 +434,15 @@ class _HomeState extends State<Home> {
   Widget _buildPlatItem(BuildContext context, int index, bool isLiked) {
     return GestureDetector(
       onTap: () {
-        /*Navigator.push(
+        Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => RecipeDescription(recette: recettesPlat[index]),
+            builder: (context) => DetailRecette(
+              recette: recettesPlat[index],
+              profile: myProfileRealTime,
+            ),
           ),
-        );*/
+        );
       },
       child: Container(
         width: 150.0,
@@ -477,11 +474,38 @@ class _HomeState extends State<Home> {
                   padding: const EdgeInsets.all(0.0),
                   onPressed: () async {
                     if (user == null) {
-                      Navigator.pushReplacement(
-                          context,
-                          PageTransition(
-                              child: LoginScreenForm(),
-                              type: PageTransitionType.leftToRight));
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Confirmation"),
+                            content: const Text(
+                                "Voulez-vous être redirigé vers la page de connexion ?"),
+                            actions: [
+                              TextButton(
+                                child: const Text("Non"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: const Text("Oui"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  Navigator.push(
+                                      context,
+                                      PageTransition(
+                                          child: LoginScreenForm(),
+                                          type: PageTransitionType.fade,
+                                          childCurrent: widget,
+                                          duration: const Duration(
+                                              milliseconds: 300)));
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     } else {
                       Profile profile =
                           await firestoreService.getCurrentUserProfile();
@@ -497,8 +521,6 @@ class _HomeState extends State<Home> {
                             profile.idProfile,
                             recettesPlat[index].idRecette,
                             false);
-                        profile.unlikeContent(recettesPlat[index]);
-                        recettesPlat[index].unlikeContent(profile.idProfile);
                       } else {
                         //action like
                         setState(() {
@@ -511,8 +533,6 @@ class _HomeState extends State<Home> {
                             profile.idProfile,
                             recettesPlat[index].idRecette,
                             true);
-                        profile.likeContent(recettesPlat[index]);
-                        recettesPlat[index].likeContent(profile.idProfile);
                       }
                     }
                   },
@@ -560,12 +580,15 @@ class _HomeState extends State<Home> {
   Widget _buildDessertItem(BuildContext context, int index, bool isLiked) {
     return GestureDetector(
       onTap: () {
-        /*Navigator.push(
+        Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => RecipeDescription(recette: recettesDessert[index]),
+            builder: (context) => DetailRecette(
+              recette: recettesDessert[index],
+              profile: myProfileRealTime,
+            ),
           ),
-        );*/
+        );
       },
       child: Container(
         width: 150.0,
@@ -597,11 +620,38 @@ class _HomeState extends State<Home> {
                   padding: const EdgeInsets.all(0.0),
                   onPressed: () async {
                     if (user == null) {
-                      Navigator.pushReplacement(
-                          context,
-                          PageTransition(
-                              child: LoginScreenForm(),
-                              type: PageTransitionType.leftToRight));
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Confirmation"),
+                            content: const Text(
+                                "Voulez-vous être redirigé vers la page de connexion ?"),
+                            actions: [
+                              TextButton(
+                                child: const Text("Non"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: const Text("Oui"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  Navigator.push(
+                                      context,
+                                      PageTransition(
+                                          child: LoginScreenForm(),
+                                          type: PageTransitionType.fade,
+                                          childCurrent: widget,
+                                          duration: const Duration(
+                                              milliseconds: 300)));
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     } else {
                       Profile profile =
                           await firestoreService.getCurrentUserProfile();
@@ -617,8 +667,6 @@ class _HomeState extends State<Home> {
                             profile.idProfile,
                             recettesDessert[index].idRecette,
                             false);
-                        profile.unlikeContent(recettesDessert[index]);
-                        recettesDessert[index].unlikeContent(profile.idProfile);
                       } else {
                         //action like
                         setState(() {
@@ -631,8 +679,6 @@ class _HomeState extends State<Home> {
                             profile.idProfile,
                             recettesDessert[index].idRecette,
                             true);
-                        profile.likeContent(recettesDessert[index]);
-                        recettesDessert[index].likeContent(profile.idProfile);
                       }
                     }
                   },
@@ -680,12 +726,15 @@ class _HomeState extends State<Home> {
   Widget _buildBoissonItem(BuildContext context, int index, bool isLiked) {
     return GestureDetector(
       onTap: () {
-        /*Navigator.push(
+        Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => RecipeDescription(recette: recettesBoisson[index]),
+            builder: (context) => DetailRecette(
+              recette: recettesBoisson[index],
+              profile: myProfileRealTime,
+            ),
           ),
-        );*/
+        );
       },
       child: Container(
         width: 150.0,
@@ -717,14 +766,41 @@ class _HomeState extends State<Home> {
                   padding: const EdgeInsets.all(0.0),
                   onPressed: () async {
                     if (user == null) {
-                      Navigator.pushReplacement(
-                          context,
-                          PageTransition(
-                              child: LoginScreenForm(),
-                              type: PageTransitionType.leftToRight));
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Confirmation"),
+                            content: const Text(
+                                "Voulez-vous être redirigé vers la page de connexion ?"),
+                            actions: [
+                              TextButton(
+                                child: const Text("Non"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: const Text("Oui"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  Navigator.push(
+                                      context,
+                                      PageTransition(
+                                          child: LoginScreenForm(),
+                                          type: PageTransitionType.fade,
+                                          childCurrent: widget,
+                                          duration: const Duration(
+                                              milliseconds: 300)));
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     } else {
                       Profile profile =
-                          await firestoreService.getCurrentUserProfile();
+                      await firestoreService.getCurrentUserProfile();
                       if (isLiked) {
                         //action unlike
                         setState(() {
@@ -737,8 +813,6 @@ class _HomeState extends State<Home> {
                             profile.idProfile,
                             recettesBoisson[index].idRecette,
                             false);
-                        profile.unlikeContent(recettesBoisson[index]);
-                        recettesBoisson[index].unlikeContent(profile.idProfile);
                       } else {
                         //action like
                         setState(() {
@@ -751,8 +825,6 @@ class _HomeState extends State<Home> {
                             profile.idProfile,
                             recettesBoisson[index].idRecette,
                             true);
-                        profile.likeContent(recettesBoisson[index]);
-                        recettesBoisson[index].likeContent(profile.idProfile);
                       }
                     }
                   },

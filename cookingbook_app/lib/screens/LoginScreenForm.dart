@@ -1,14 +1,10 @@
 import 'package:cookingbook_app/screens/EmailVerification.dart';
 import 'package:cookingbook_app/screens/UserAccountPage.dart';
-import 'package:eva_icons_flutter/eva_icons_flutter.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cookingbook_app/services/Authentication.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:cookingbook_app/Utils/FirebaseConstants.dart';
-
-import '../models/Profile.dart';
-import '../services/FireStoreService.dart';
-import 'Home.dart';
 
 class LoginScreenForm extends StatefulWidget {
   @override
@@ -25,111 +21,159 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
 
   bool _isLoading = false;
 
-  FirestoreService firestoreService = FirestoreService();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              TextField(
+              Container(
+                decoration: BoxDecoration(
+                    color: Colors.orange.shade100,
+                    borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(50),
+                        bottomRight: Radius.circular(50))),
+                padding: const EdgeInsets.all(16.0),
+                child: RichText(
+                  text: const TextSpan(
+                      text: 'the',
+                      style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Colors.deepOrange,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: FontStyle.italic,
+                          fontSize: 30.0),
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: 'Cooking',
+                          style: TextStyle(
+                              fontFamily: 'Poppins',
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                              fontSize: 34.0),
+                        ),
+                        TextSpan(
+                          text: 'Book',
+                          style: TextStyle(
+                              fontFamily: 'Poppins',
+                              color: Colors.deepOrange,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                              fontSize: 34.0),
+                        )
+                      ]),
+                ),
+              ),
+              const SizedBox(
+                height: 26,
+              ),
+              TextFormField(
                 controller: userEmailController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter email',
+                decoration: InputDecoration(
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.deepOrange),
+                  ),
+                  enabledBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.deepOrange,
+                    ),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.email,
+                    color: Colors.deepOrange,
+                  ),
+                  labelStyle: const TextStyle(color: Colors.deepOrange),
+                  labelText: 'Email',
+                  fillColor: Colors.orange.shade50,
+                  filled: true,
                 ),
               ),
               const SizedBox(height: 20),
-              TextField(
+              TextFormField(
                 controller: userPasswordController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter password',
+                decoration: InputDecoration(
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.deepOrange),
+                  ),
+                  enabledBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.deepOrange,
+                    ),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.lock,
+                    color: Colors.deepOrange,
+                  ),
+                  labelStyle: const TextStyle(color: Colors.deepOrange),
+                  labelText: 'Mot de passe',
+                  fillColor: Colors.orange.shade50,
+                  filled: true,
                 ),
                 obscureText: true,
               ),
               const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  if (userEmailController.text.isNotEmpty &&
-                      userPasswordController.text.isNotEmpty) {
-                    auth
-                        .logIntoAccount(userEmailController.text,
-                            userPasswordController.text)
-                        .then((success) {
-                      if (success) {
-                        setState(() {
-                          signInMethod = "emailPassword";
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      if (userEmailController.text.isNotEmpty &&
+                          userPasswordController.text.isNotEmpty) {
+                        auth
+                            .logIntoAccount(userEmailController.text,
+                                userPasswordController.text)
+                            .then((success) {
+                          if (success) {
+                            setState(() {
+                              signInMethod = "emailPassword";
+                            });
+                            Navigator.pushReplacement(
+                                context,
+                                PageTransition(
+                                    child:
+                                        UserAccountPage(signInMethod: signInMethod),
+                                    type: PageTransitionType.bottomToTop));
+                          }
+                        }).catchError((error) {
+                          if (error.code == 'user-not-found') {
+                            warningText(context, "User not found");
+                          } else if (error.code == 'wrong-password') {
+                            warningText(context, "Wrong Password");
+                          }
                         });
-                        Navigator.pushReplacement(
-                            context,
-                            PageTransition(
-                                child:
-                                    UserAccountPage(signInMethod: signInMethod),
-                                type: PageTransitionType.bottomToTop));
+                      } else {
+                        warningText(context, 'Veuillez remplir tous champs !');
                       }
-                    }).catchError((error) {
-                      if (error.code == 'user-not-found') {
-                        warningText(context, "User not found");
-                      } else if (error.code == 'wrong-password') {
-                        warningText(context, "Wrong Password");
-                      }
-                    });
-                  } else {
-                    warningText(context, 'Fill all the champ !');
-                  }
-                },
-                child: Text('Log In'),
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange),
+                    child: const Text('Se connecter'),
+                  ),
+                ],
               ),
               const SizedBox(
-                height: 10,
+                height: 16,
               ),
-              GestureDetector(
-                onTap: () {
-                  // Navigate to sign up page
-                  signInSheet(context);
-                },
-                child: const Text('Sign Up'),
+              const Text(
+                "Vous n'avez pas de compte ?",
               ),
-              const SizedBox(
-                height: 10,
-              ),
-              GestureDetector(
-                onTap: () {
-                  auth.signInWithGoogle().whenComplete(() async {
-                    setState(() {
-                      signInMethod = "google";
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Center(
-                            child: Text(
-                          "Login succes with Google Account ! ",
-                          textAlign: TextAlign.center,
-                        )),
-                        duration: Duration(seconds: 2),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-
-                    Navigator.pushReplacement(
-                        context,
-                        PageTransition(
-                            child: Home(
-                                signInMethod: signInMethod),
-                            type: PageTransitionType.leftToRight));
-                  });
-                },
-                child: const Icon(
-                  EvaIcons.google,
-                ),
-              ),
+              RichText(
+                  text: TextSpan(
+                      text: "S'inscrire",
+                      style: const TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepOrange),
+                      recognizer: TapGestureRecognizer()..onTap = () {
+                        // Navigate to sign up page
+                        signInSheet(context);
+                      })),
             ],
           ),
         ),
@@ -144,126 +188,153 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
         builder: (context) {
           return Padding(
             padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom),
-            child: Container(
-                height: MediaQuery.of(context).size.height * 0.50,
-                width: MediaQuery.of(context).size.width,
-                decoration: const BoxDecoration(
-                    color: Colors.blueGrey,
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(12.0),
-                        topRight: Radius.circular(12.0))),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: TextField(
+              bottom: MediaQuery.of(context).viewInsets.bottom
+            ),
+            child: Expanded(
+              child: Container(
+                  height: MediaQuery.of(context).size.height * 0.60,
+                  width: MediaQuery.of(context).size.width,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+                  decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(12.0),
+                          topRight: Radius.circular(12.0))),
+                  child: Column(
+                    children: [
+                      TextField(
                         controller: pseudoNomController,
-                        decoration: const InputDecoration(
-                            hintText: 'Enter pseudo...',
-                            hintStyle: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.0)),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.0),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: TextField(
-                        controller: userEmailController,
-                        decoration: const InputDecoration(
-                            hintText: 'Enter email...',
-                            hintStyle: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.0)),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.0),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: TextField(
-                        controller: userPasswordController,
-                        decoration: const InputDecoration(
-                            hintText: 'Enter password...',
-                            hintStyle: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.0)),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.0),
-                        obscureText: true,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: TextField(
-                        controller: userPassWordConfirmController,
-                        decoration: const InputDecoration(
-                          hintText: 'Re-type password...',
-                          hintStyle: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16.0,
+                        decoration: InputDecoration(
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.deepOrange),
                           ),
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.deepOrange,
+                            ),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.person,
+                            color: Colors.deepOrange,
+                          ),
+                          fillColor: Colors.orange.shade50,
+                          filled: true,
+                          labelText: "Nom d'utilisateur",
+                          labelStyle: const TextStyle(color: Colors.deepOrange),
                         ),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18.0,
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: userEmailController,
+                        decoration: InputDecoration(
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.green),
+                          ),
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.deepOrange,
+                            ),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.email,
+                            color: Colors.deepOrange,
+                          ),
+                          labelStyle: const TextStyle(color: Colors.deepOrange),
+                          labelText: 'Email',
+                          fillColor: Colors.orange.shade50,
+                          filled: true,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: userPasswordController,
+                        decoration: InputDecoration(
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.deepOrange),
+                          ),
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.deepOrange,
+                            ),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.lock,
+                            color: Colors.deepOrange,
+                          ),
+                          labelStyle: const TextStyle(color: Colors.deepOrange),
+                          labelText: 'Mot de passe',
+                          fillColor: Colors.orange.shade50,
+                          filled: true,
                         ),
                         obscureText: true,
                       ),
-                    ),
-                    _isLoading
-                        ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: () async {
-                              setState(() {
-                                _isLoading = true;
-                              });
-                              if (userEmailController.text.isNotEmpty &&
-                                  userPasswordController.text.isNotEmpty &&
-                                  userPassWordConfirmController
-                                      .text.isNotEmpty) {
-                                if (userPasswordController.text ==
-                                    userPassWordConfirmController.text) {
-                                  await auth.signUp(
-                                    pseudoNom: pseudoNomController.text,
-                                      userEmail: userEmailController.text,
-                                      password: userPasswordController.text,
-                                      context: context);
-                                  if (authFirebase.currentUser != null) {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                EmailVerificationScreen()));
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: userPassWordConfirmController,
+                        decoration: InputDecoration(
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.deepOrange),
+                          ),
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.deepOrange,
+                            ),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.lock,
+                            color: Colors.deepOrange,
+                          ),
+                          labelStyle: const TextStyle(color: Colors.deepOrange),
+                          labelText: 'Confirmer le mot de passe',
+                          fillColor: Colors.orange.shade50,
+                          filled: true,
+                        ),
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _isLoading
+                          ? const CircularProgressIndicator()
+                          : ElevatedButton(
+                              onPressed: () async {
+                                setState(() {
+                                  _isLoading = true;
+                                });
+                                if (userEmailController.text.isNotEmpty &&
+                                    userPasswordController.text.isNotEmpty &&
+                                    userPassWordConfirmController.text.isNotEmpty) {
+                                  if (userPasswordController.text ==
+                                      userPassWordConfirmController.text) {
+                                    await auth.signUp(
+                                        pseudoNom: pseudoNomController.text,
+                                        userEmail: userEmailController.text,
+                                        password: userPasswordController.text,
+                                        context: context);
+                                    if (authFirebase.currentUser != null) {
+                                      Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  EmailVerificationScreen()));
+                                    }
+                                  } else {
+                                    warningText(context,
+                                        "Mots de passe incompatibles , recommencer");
                                   }
                                 } else {
-                                  warningText(context,
-                                      "Passwords do not match , re-type please");
+                                  warningText(context, "Fill the champ");
                                 }
-                              } else {
-                                warningText(context, "Fill the champ");
-                              }
-                              setState(() {
-                                _isLoading = false;
-                              });
-                            },
-                            child: Text("Sign Up"),
-                          ),
-                  ],
-                )),
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepOrange),
+                              child: const Text("Valider"),
+                            ),
+                    ],
+                  )),
+            ),
           );
         });
   }
