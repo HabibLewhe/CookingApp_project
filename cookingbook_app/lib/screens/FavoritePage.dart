@@ -5,11 +5,13 @@ import 'package:cookingbook_app/screens/SearchScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:page_transition/page_transition.dart';
 import '../models/Profile.dart';
 import '../services/FireStoreService.dart';
+import 'LoginScreenForm.dart';
 
 class FavoritePage extends StatefulWidget {
-  final Profile profile;
+  final Profile? profile;
 
   const FavoritePage({
     Key? key,
@@ -22,7 +24,10 @@ class FavoritePage extends StatefulWidget {
 
 class _FavoritePageState extends State<FavoritePage> {
   bool isNotConnected() {
-    return widget.profile == null;
+    if(widget.profile == null) {
+      return true;
+    }
+    return false;
   }
 
   late List<Recette> recettesFavorites = [];
@@ -88,7 +93,15 @@ class _FavoritePageState extends State<FavoritePage> {
                             borderRadius: BorderRadius.circular(20)),
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                          context,
+                          PageTransition(
+                              child: LoginScreenForm(),
+                              type: PageTransitionType.rightToLeft,
+                              childCurrent: widget,
+                              duration: const Duration(milliseconds: 300)));
+                    },
                     child: const Text(
                       'Je me connecte',
                       style: TextStyle(fontWeight: FontWeight.w400),
@@ -100,8 +113,17 @@ class _FavoritePageState extends State<FavoritePage> {
                           text: "Je crée un compte",
                           style: const TextStyle(
                               decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.bold,
                               color: Colors.red),
-                          recognizer: TapGestureRecognizer()..onTap = () {}))
+                          recognizer: TapGestureRecognizer()..onTap = () {
+                            Navigator.pushReplacement(
+                                context,
+                                PageTransition(
+                                    child: LoginScreenForm(),
+                                    type: PageTransitionType.rightToLeft,
+                                    childCurrent: widget,
+                                    duration: const Duration(milliseconds: 300)));
+                          }))
                 ],
               ),
             )
@@ -119,7 +141,7 @@ class _FavoritePageState extends State<FavoritePage> {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => DetailRecette(
-                                recette: recette, profile: widget.profile),
+                                recette: recette, profile: widget.profile!),
                           ),
                         );
                       },
@@ -143,7 +165,7 @@ class _FavoritePageState extends State<FavoritePage> {
                                 recette.idRecette, false);
                             //unlike : flag = false
                             firestoreService.updateProfileLikedRecette(
-                                widget.profile.idProfile,
+                                widget.profile!.idProfile,
                                 recette.idRecette,
                                 false);
                             setState(() {

@@ -220,15 +220,13 @@ class _SearchScreenState extends State<SearchScreen> {
               icon: IconButton(
                 icon: const Icon(Icons.favorite_border),
                 onPressed: () {
-                  if (profile != null) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => FavoritePage(
-                                profile: profile!,
-                              )),
-                    );
-                  }
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => FavoritePage(
+                          profile: profile,
+                        )),
+                  );
                 },
               ),
               label: 'Favoris',

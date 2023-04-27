@@ -142,9 +142,9 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                           }
                         }).catchError((error) {
                           if (error.code == 'user-not-found') {
-                            warningText(context, "User not found");
+                            warningText(context, "Utilisateur introuvable");
                           } else if (error.code == 'wrong-password') {
-                            warningText(context, "Wrong Password");
+                            warningText(context, "Mot de passe erroné");
                           }
                         });
                       } else {
@@ -322,7 +322,7 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                                         "Mots de passe incompatibles , recommencer");
                                   }
                                 } else {
-                                  warningText(context, "Fill the champ");
+                                  warningText(context, "Veuillez remplir tous champs");
                                 }
                                 setState(() {
                                   _isLoading = false;
@@ -345,7 +345,8 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
         builder: (context) {
           return Container(
             decoration: BoxDecoration(
-                color: Colors.black, borderRadius: BorderRadius.circular(15.0)),
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(15.0)),
             height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width,
             child: Center(

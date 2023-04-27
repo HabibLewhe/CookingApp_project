@@ -133,7 +133,7 @@ class _DetailRecetteState extends State<DetailRecette> {
               children: <Widget>[
                 ListTile(
                   leading: const Icon(Icons.photo_library),
-                  title: const Text('Photo Library'),
+                  title: const Text('Choisir une photo'),
                   onTap: () {
                     _selectImage(ImageSource.gallery);
                     Navigator.pop(context);
@@ -141,7 +141,7 @@ class _DetailRecetteState extends State<DetailRecette> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_camera),
-                  title: const Text('Camera'),
+                  title: const Text('Prendre une photo'),
                   onTap: () {
                     _selectImage(ImageSource.camera);
                     Navigator.pop(context);

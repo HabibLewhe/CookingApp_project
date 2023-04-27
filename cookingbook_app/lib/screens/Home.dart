@@ -33,7 +33,7 @@ class _HomeState extends State<Home> {
 
   FirestoreService firestoreService = FirestoreService();
 
-  late Profile myProfileRealTime;
+  late Profile? myProfileRealTime;
 
   Future<void> getMyProfileRealTime() async {
     Stream<Profile> stream = firestoreService.getCurrentUserProfileRealTime();
@@ -66,6 +66,7 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
+    myProfileRealTime = null;
     getAllRecettesRealTime();
     getMyProfileRealTime();
     super.initState();
@@ -92,8 +93,7 @@ class _HomeState extends State<Home> {
               // Ouvrir le profil utilisateur
               print("user uid ${user?.uid}");
               if (user == null) {
-                Navigator.of(context).pop();
-                Navigator.push(
+                Navigator.pushReplacement(
                     context,
                     PageTransition(
                         child: LoginScreenForm(),
@@ -263,15 +263,13 @@ class _HomeState extends State<Home> {
             icon: IconButton(
               icon: const Icon(Icons.favorite_border),
               onPressed: () {
-                if (myProfileRealTime != null) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => FavoritePage(
-                              profile: myProfileRealTime,
-                            )),
-                  );
-                }
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => FavoritePage(
+                        profile: myProfileRealTime,
+                      )),
+                );
               },
             ),
             label: 'Favoris',
@@ -291,7 +289,7 @@ class _HomeState extends State<Home> {
           MaterialPageRoute(
             builder: (context) => DetailRecette(
               recette: recettesEntree[index],
-              profile: myProfileRealTime,
+              profile: myProfileRealTime!,
             ),
           ),
         );
@@ -439,7 +437,7 @@ class _HomeState extends State<Home> {
           MaterialPageRoute(
             builder: (context) => DetailRecette(
               recette: recettesPlat[index],
-              profile: myProfileRealTime,
+              profile: myProfileRealTime!,
             ),
           ),
         );
@@ -585,7 +583,7 @@ class _HomeState extends State<Home> {
           MaterialPageRoute(
             builder: (context) => DetailRecette(
               recette: recettesDessert[index],
-              profile: myProfileRealTime,
+              profile: myProfileRealTime!,
             ),
           ),
         );
@@ -731,7 +729,7 @@ class _HomeState extends State<Home> {
           MaterialPageRoute(
             builder: (context) => DetailRecette(
               recette: recettesBoisson[index],
-              profile: myProfileRealTime,
+              profile: myProfileRealTime!,
             ),
           ),
         );

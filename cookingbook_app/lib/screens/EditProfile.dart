@@ -38,7 +38,7 @@ class _EditProfileState extends State<EditProfile> {
               children: <Widget>[
                 ListTile(
                   leading: const Icon(Icons.photo_library),
-                  title: const Text('Photo Library'),
+                  title: const Text('Choisir une photo'),
                   onTap: () {
                     _selectImage(ImageSource.gallery);
                     Navigator.pop(context);
@@ -46,7 +46,7 @@ class _EditProfileState extends State<EditProfile> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_camera),
-                  title: const Text('Camera'),
+                  title: const Text('Prendre une photo'),
                   onTap: () {
                     _selectImage(ImageSource.camera);
                     Navigator.pop(context);
@@ -90,10 +90,6 @@ class _EditProfileState extends State<EditProfile> {
     if (pickedFile != null) {
       setState(() {
         _imageProfile = File(pickedFile.path);
-
-        print("this is image path_____________ ${_imageProfile!.path}");
-        // _recette.image = pickedFile.path;
-        print("Votre image : ${pickedFile.path}");
       });
     }
   }
@@ -199,14 +195,24 @@ class _EditProfileState extends State<EditProfile> {
                     child: TextFormField(
                       controller: _pseudoController,
                       style: const TextStyle(fontSize: 20, color: Colors.black),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.deepOrange),
+                          borderRadius: BorderRadius.circular(5.5),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.deepOrange,
+                          ),
+                        ),
+                        labelStyle: const TextStyle(color: Colors.deepOrange),
                         labelText: 'Nouveau pseudo',
-                        prefixIcon: Icon(Icons.person),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person, color: Colors.deepOrange),
+                        border: const OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return "Please enter nom";
+                          return "Veuillez entrer votre nom d'utilisateur";
                         }
                         return null;
                       },

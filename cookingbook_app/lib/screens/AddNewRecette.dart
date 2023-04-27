@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -11,9 +12,9 @@ import '../services/Authentication.dart';
 import '../services/FireStoreService.dart';
 
 class AddNewRecette extends StatefulWidget {
-
-  const AddNewRecette({Key? key,})
-      : super(key: key);
+  const AddNewRecette({
+    Key? key,
+  }) : super(key: key);
 
   @override
   _AddNewRecetteState createState() => _AddNewRecetteState();
@@ -109,7 +110,7 @@ class _AddNewRecetteState extends State<AddNewRecette> {
               children: <Widget>[
                 ListTile(
                   leading: const Icon(Icons.photo_library),
-                  title: const Text('Photo Library'),
+                  title: const Text('Choisir une photo'),
                   onTap: () {
                     _selectImage(ImageSource.gallery);
                     Navigator.pop(context);
@@ -117,7 +118,7 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_camera),
-                  title: const Text('Camera'),
+                  title: const Text('Prendre une photo'),
                   onTap: () {
                     _selectImage(ImageSource.camera);
                     Navigator.pop(context);
@@ -257,10 +258,22 @@ class _AddNewRecetteState extends State<AddNewRecette> {
               // le nom de la recette
               TextFormField(
                 controller: _nomController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.deepOrange),
+                      borderRadius: BorderRadius.circular(5.5),
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.deepOrange,
+                      ),
+                    ),
                     labelText: 'Nom de la  recette ',
-                    prefixIcon: Icon(Icons.fastfood),
-                    border: OutlineInputBorder()),
+                    prefixIcon: const Icon(
+                      Icons.fastfood,
+                      color: Colors.deepOrange,
+                    ),
+                    border: const OutlineInputBorder()),
                 validator: (value) {
                   if (value!.isEmpty) {
                     return 'Veuillez entrer un nom';
@@ -285,21 +298,49 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                     );
                   }).toList(),
                   dropdownColor: Colors.white,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.deepOrange),
+                        borderRadius: BorderRadius.circular(5.5),
+                      ),
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.deepOrange,
+                        ),
+                      ),
                       labelText: "Catégorie de la recette",
-                      prefixIcon: Icon(Icons.category),
-                      border: OutlineInputBorder()),
+                      prefixIcon: const Icon(
+                        Icons.category,
+                        color: Colors.deepOrange,
+                      ),
+                      border: const OutlineInputBorder()),
                 ),
               ),
               const SizedBox(height: 16.0),
               // le temps de préparation de la recette
               TextFormField(
                 controller: _tempsPreparationController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.deepOrange),
+                      borderRadius: BorderRadius.circular(5.5),
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.deepOrange,
+                      ),
+                    ),
                     labelText: 'Temps de préparation (minutes)',
-                    prefixIcon: Icon(Icons.timelapse),
-                    border: OutlineInputBorder()),
+                    prefixIcon: const Icon(
+                      Icons.timelapse,
+                      color: Colors.deepOrange,
+                    ),
+                    border: const OutlineInputBorder()),
                 keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                  FilteringTextInputFormatter.digitsOnly
+                ],
                 validator: (value) {
                   if (value!.isEmpty) {
                     return 'Veuillez entrer un temps de préparation';
@@ -312,11 +353,27 @@ class _AddNewRecetteState extends State<AddNewRecette> {
               // le nombre de personne pour la recette
               TextFormField(
                 controller: _nbPersonneController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.deepOrange),
+                      borderRadius: BorderRadius.circular(5.5),
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.deepOrange,
+                      ),
+                    ),
                     labelText: 'Nombre de personnes',
-                    prefixIcon: Icon(Icons.people),
-                    border: OutlineInputBorder()),
+                    prefixIcon: const Icon(
+                      Icons.people,
+                      color: Colors.deepOrange,
+                    ),
+                    border: const OutlineInputBorder()),
                 keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                  FilteringTextInputFormatter.digitsOnly
+                ],
                 validator: (value) {
                   if (value!.isEmpty) {
                     return 'Veuillez entrer un nombre de personnes';
@@ -349,6 +406,16 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                             child: TextFormField(
                               controller: _nomIngredientsController[i],
                               decoration: const InputDecoration(
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.deepOrange),
+                                ),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Colors.deepOrange,
+                                  ),
+                                ),
+                                labelStyle: TextStyle(color: Colors.deepOrange),
                                 hintText: 'nom',
                               ),
                               validator: (value) {
@@ -365,9 +432,24 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                             flex: 1,
                             child: TextFormField(
                               controller: _quantiteController[i],
-                              decoration:
-                                  const InputDecoration(hintText: 'quantite'),
+                              decoration: const InputDecoration(
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.deepOrange),
+                                ),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Colors.deepOrange,
+                                  ),
+                                ),
+                                hintText: 'quantite',
+                              ),
                               keyboardType: TextInputType.number,
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'[0-9]')),
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
                               validator: (value) {
                                 if (value!.isEmpty) {
                                   return 'Veuillez entrer une quantité';
@@ -381,6 +463,16 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                             flex: 1,
                             child: DropdownButtonFormField(
                               dropdownColor: Colors.white,
+                              decoration: const InputDecoration(
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: Colors.deepOrange),
+                                  ),
+                                  enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Colors.deepOrange,
+                                    ),
+                                  )),
                               value: selectedVals[i],
                               items: uniteDeMesures
                                   .map((e) => DropdownMenuItem(
@@ -420,10 +512,22 @@ class _AddNewRecetteState extends State<AddNewRecette> {
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: _instructionController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.deepOrange),
+                      borderRadius: BorderRadius.circular(5.5),
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.deepOrange,
+                      ),
+                    ),
                     labelText: 'Mode préparatoire',
-                    prefixIcon: Icon(Icons.text_snippet),
-                    border: OutlineInputBorder()),
+                    prefixIcon: const Icon(
+                      Icons.text_snippet,
+                      color: Colors.deepOrange,
+                    ),
+                    border: const OutlineInputBorder()),
                 maxLines: 5,
                 validator: (value) {
                   if (value!.isEmpty) {
@@ -445,39 +549,53 @@ class _AddNewRecetteState extends State<AddNewRecette> {
       Map<String, String> ingredients = {};
       String quantite;
       String nomIngredient;
-      print("this is imageFile.path ${_imageFile!.path}");
-      String recetteImage = await firestoreService.uploadImageToFirebase(
-          _imageFile!, 'recetteImages');
-      print("this is recetteImage URL online $recetteImage");
-      Duration recetteDuration =
-      Duration(minutes: int.parse(_tempsPreparationController.text));
+      //print("this is imageFile.path ${_imageFile!.path}");
 
-      for (int i = 0; i < _nomIngredientsController.length; i++) {
-        quantite = "${_quantiteController[i].text} ${selectedVals[i]}";
+      if (_imageFile == null) {
 
-        nomIngredient = _nomIngredientsController[i].text;
+        const text = "Vous n'avez ajouter aucune photo ";
+        final snackBar = SnackBar(
+          content: const Text(text),
+          action: SnackBarAction(
+            label: 'Annuler',
+            onPressed: () {},
+          ),
+        );
 
-        ingredients.putIfAbsent(nomIngredient, () => quantite);
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      } else {
+
+        String recetteImage = await firestoreService.uploadImageToFirebase(
+            _imageFile!, 'recetteImages');
+
+        Duration recetteDuration =
+            Duration(minutes: int.parse(_tempsPreparationController.text));
+
+        for (int i = 0; i < _nomIngredientsController.length; i++) {
+          quantite = "${_quantiteController[i].text} ${selectedVals[i]}";
+
+          nomIngredient = _nomIngredientsController[i].text;
+
+          ingredients.putIfAbsent(nomIngredient, () => quantite);
+        }
+        Recette _recette = Recette(
+            idUser: '',
+            idRecette: '',
+            image: recetteImage,
+            nom: _nomController.text,
+            tempsPreparation: recetteDuration,
+            nbPersonne: _nbPersonneController.text,
+            instruction: _instructionController.text,
+            ingredients: ingredients,
+            categorie: _selectedCategorie,
+            likeur: [],
+            commentaires: []);
+        addRecetteToFirestore(_recette);
+        Navigator.of(context).pop();
       }
-      Recette _recette = Recette(
-          idUser: '',
-          idRecette: '',
-          image: recetteImage,
-          nom: _nomController.text,
-          tempsPreparation: recetteDuration,
-          nbPersonne: _nbPersonneController.text,
-          instruction: _instructionController.text,
-          ingredients: ingredients,
-          categorie: _selectedCategorie,
-          likeur: [],
-          commentaires: []);
-      addRecetteToFirestore(_recette);
-      Navigator.of(context).pop();
       // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       //   content: Text("Created succesufully!"),
       // ));
-      // Enregistrer la recette dans la base de données ou effectuer toute autre action requise
-      // Utilisez simplement _recette pour accéder aux attributs de la recette que l'utilisateur vient de créer
     }
   }
 }
