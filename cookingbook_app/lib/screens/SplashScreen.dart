@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:cookingbook_app/screens/Home.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
+
+import 'Home.dart';
 
 class Splashscreen extends StatefulWidget {
   @override

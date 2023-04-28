@@ -1,14 +1,16 @@
-import 'package:cookingbook_app/screens/DetailRecette.dart';
-import 'package:cookingbook_app/screens/SearchScreen.dart';
-import 'package:cookingbook_app/screens/UserAccountPage.dart';
+import 'dart:async';
+
 import 'package:cookingbook_app/services/FireStoreService.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
+import 'DetailRecette.dart';
 import 'FavoritePage.dart';
 import 'LoginScreenForm.dart';
+import 'SearchScreen.dart';
+import 'UserAccountPage.dart';
 
 class Home extends StatefulWidget {
   String? signInMethod;
@@ -34,10 +36,12 @@ class _HomeState extends State<Home> {
   FirestoreService firestoreService = FirestoreService();
 
   late Profile? myProfileRealTime;
+  StreamSubscription<Profile>? _myProfileRealTimeSubscription;
+  StreamSubscription<List<Recette>>? _allRecettesRealTimeSubscription;
 
   Future<void> getMyProfileRealTime() async {
     Stream<Profile> stream = firestoreService.getCurrentUserProfileRealTime();
-    stream.listen((Profile profile) {
+    _myProfileRealTimeSubscription = stream.listen((Profile profile) {
       setState(() {
         myProfileRealTime = profile;
       });
@@ -46,7 +50,7 @@ class _HomeState extends State<Home> {
 
   Future<void> getAllRecettesRealTime() async {
     Stream<List<Recette>> stream = firestoreService.getAllRecettesRealTime();
-    stream.listen((List<Recette> recettes) {
+    _allRecettesRealTimeSubscription = stream.listen((List<Recette> recettes) {
       setState(() {
         allRecette = recettes;
         recettesEntree = allRecette
@@ -73,6 +77,14 @@ class _HomeState extends State<Home> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    _myProfileRealTimeSubscription?.cancel();
+    _allRecettesRealTimeSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -93,7 +105,8 @@ class _HomeState extends State<Home> {
               // Ouvrir le profil utilisateur
               print("user uid ${user?.uid}");
               if (user == null) {
-                Navigator.pushReplacement(
+                Navigator.of(context).pop();
+                Navigator.push(
                     context,
                     PageTransition(
                         child: LoginScreenForm(),
@@ -105,9 +118,7 @@ class _HomeState extends State<Home> {
                     context,
                     //MaterialPageRoute(builder: (ctx) => UserAccountPage(signInMethod: 'emailAndPassword',)
                     PageTransition(
-                        child: UserAccountPage(
-                          signInMethod: 'emailAndPassword',
-                        ),
+                        child: UserAccountPage(),
                         type: PageTransitionType.rightToLeft,
                         childCurrent: widget,
                         duration: const Duration(milliseconds: 300)));
@@ -798,7 +809,7 @@ class _HomeState extends State<Home> {
                       );
                     } else {
                       Profile profile =
-                      await firestoreService.getCurrentUserProfile();
+                          await firestoreService.getCurrentUserProfile();
                       if (isLiked) {
                         //action unlike
                         setState(() {

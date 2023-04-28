@@ -1,14 +1,14 @@
 import 'package:cookingbook_app/models/Recette.dart';
-import 'package:cookingbook_app/screens/DetailRecette.dart';
 import 'package:cookingbook_app/screens/Home.dart';
-import 'package:cookingbook_app/screens/SearchScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../models/Profile.dart';
 import '../services/FireStoreService.dart';
+import 'DetailRecette.dart';
 import 'LoginScreenForm.dart';
+import 'SearchScreen.dart';
 
 class FavoritePage extends StatefulWidget {
   final Profile? profile;

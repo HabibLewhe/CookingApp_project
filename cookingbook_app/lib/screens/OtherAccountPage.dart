@@ -8,33 +8,40 @@ import '../models/Recette.dart';
 import '../services/Authentication.dart';
 import '../services/FireStoreService.dart';
 
-import 'AddNewRecette.dart';
 import 'DetailRecette.dart';
-import 'EditProfile.dart';
 import 'SearchScreen.dart';
 
-class UserAccountPage extends StatefulWidget {
+class OtherAccountPage extends StatefulWidget {
+  String idProfile;
+
+  OtherAccountPage({required this.idProfile});
+
   @override
-  _UserAccountPageState createState() => _UserAccountPageState();
+  _OtherAccountPageState createState() => _OtherAccountPageState();
 }
 
-class _UserAccountPageState extends State<UserAccountPage> {
+class _OtherAccountPageState extends State<OtherAccountPage> {
   Authentication auth = Authentication();
-  late List<Recette> myRecetteRealTime;
-  late Profile myProfileRealTime;
+  StreamSubscription<List<Recette>>? _sesRecetteRealTimeSubscription;
   StreamSubscription<Profile>? _myProfileRealTimeSubscription;
-  StreamSubscription<List<Recette>>? _myRecetteRealTimeSubscription;
+  StreamSubscription<Profile>? _sonProfileSubscription;
+  late List<Recette> sesRecetteRealTime;
+  late Profile myProfileRealTime;
+  late Profile sonProfile;
+  late String sonIdProfile;
 
   int nbRecettes = 0;
   int allLikeRealTime = 0;
+  late int allLikes;
 
   FirestoreService firestoreService = FirestoreService();
 
-  Future<void> getMyRecettesRealTime() async {
-    Stream<List<Recette>> stream = firestoreService.getRecettesRealTime();
-    _myRecetteRealTimeSubscription = stream.listen((List<Recette> recettes) {
+  Future<void> getSesRecettesRealTime() async {
+    Stream<List<Recette>> stream =
+        firestoreService.getSesRecettesRealTime(sonIdProfile);
+    _sesRecetteRealTimeSubscription = stream.listen((List<Recette> recettes) {
       setState(() {
-        myRecetteRealTime = recettes;
+        sesRecetteRealTime = recettes;
       });
     });
   }
@@ -44,6 +51,16 @@ class _UserAccountPageState extends State<UserAccountPage> {
     _myProfileRealTimeSubscription = stream.listen((Profile profile) {
       setState(() {
         myProfileRealTime = profile;
+      });
+    });
+  }
+
+  Future<void> getSonProfileRealTime() async {
+    Stream<Profile> stream =
+        firestoreService.getProfileByIdRealTime(sonIdProfile);
+    _sonProfileSubscription = stream.listen((Profile profile) {
+      setState(() {
+        sonProfile = profile;
       });
     });
   }
@@ -58,10 +75,14 @@ class _UserAccountPageState extends State<UserAccountPage> {
 
   @override
   void initState() {
-    myRecetteRealTime = [];
-    getMyRecettesRealTime();
+    sesRecetteRealTime = [];
+    sonIdProfile = widget.idProfile;
+    getSonProfileRealTime();
+    getSesRecettesRealTime();
     getMyProfileRealTime();
-    firestoreService.getRecettesRealTime().listen((List<Recette> recettes) {
+    firestoreService
+        .getSesRecettesRealTime(sonIdProfile)
+        .listen((List<Recette> recettes) {
       setState(() {
         nbRecettes = recettes.length;
         allLikeRealTime = computeTotalLikes(recettes);
@@ -74,11 +95,11 @@ class _UserAccountPageState extends State<UserAccountPage> {
   @override
   void dispose() {
     // TODO: implement dispose
-    _myProfileRealTimeSubscription?.cancel();
-    _myRecetteRealTimeSubscription?.cancel();
     allLikeRealTime = 0;
     nbRecettes = 0;
-    myProfileRealTime;
+    _myProfileRealTimeSubscription?.cancel();
+    _sesRecetteRealTimeSubscription?.cancel();
+    _sonProfileSubscription?.cancel();
     super.dispose();
   }
 
@@ -114,9 +135,9 @@ class _UserAccountPageState extends State<UserAccountPage> {
       );
 
   Widget _buildUserRecettes() {
-    return myRecetteRealTime.isEmpty
+    return sesRecetteRealTime.isEmpty
         ? const Padding(
-            padding: EdgeInsets.symmetric(vertical: 120),
+            padding: EdgeInsets.symmetric(vertical: 150),
             child: Center(
               child: Text(
                 "Vous n'avez encore aucune recette",
@@ -127,7 +148,8 @@ class _UserAccountPageState extends State<UserAccountPage> {
         : Flexible(
             flex: 1,
             child: StreamBuilder<List<Recette>>(
-                stream: firestoreService.getRecettesRealTime(),
+                stream: firestoreService
+                    .getSesRecettesRealTime(sonProfile.idProfile),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return Text('Error: ${snapshot.error}');
@@ -179,39 +201,6 @@ class _UserAccountPageState extends State<UserAccountPage> {
                                 ),
                               );
                             },
-                            trailing: IconButton(
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.deepOrange,
-                              ),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: const Text('Confirmation'),
-                                      content: const Text(
-                                          'Are you sure you want to delete this recette?'),
-                                      actions: [
-                                        TextButton(
-                                          child: const Text('Cancel'),
-                                          onPressed: () =>
-                                              Navigator.of(context).pop(),
-                                        ),
-                                        TextButton(
-                                          child: const Text('Confirm'),
-                                          onPressed: () async {
-                                            firestoreService.deleteRecette(
-                                                recette.idRecette);
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                            ),
                           ),
                         );
                       });
@@ -233,7 +222,7 @@ class _UserAccountPageState extends State<UserAccountPage> {
             child: GestureDetector(
               onTap: () {
                 auth.onLogout();
-                Navigator.pushReplacement(
+                Navigator.push(
                     context, MaterialPageRoute(builder: (ctx) => Home()));
               },
               child: const Icon(
@@ -270,44 +259,31 @@ class _UserAccountPageState extends State<UserAccountPage> {
                               fit: BoxFit.cover,
                               width: 100,
                               height: 100,
-                              child: InkWell(onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (ctx) => EditProfile(
-                                              profile: myProfileRealTime,
-                                            )));
-                              }),
                             ),
                           ),
                         ),
                         Positioned(
                           bottom: 0,
                           right: 0,
-                          child: ClipOval(
-                            child: Container(
-                              padding: const EdgeInsets.all(3),
-                              color: Colors.white,
-                              child: ClipOval(
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  color: Colors.deepOrange,
-                                  child: const Icon(
-                                    Icons.edit,
-                                    color: Colors.white,
-                                    size: 15,
-                                  ),
-                                ),
-                              ),
-                            ),
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            color: Colors.transparent,
                           ),
                         ),
                       ]),
                       const SizedBox(height: 8),
-                      Text(
-                        profile.pseudo,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 24),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.soup_kitchen_outlined,
+                            color: Colors.orange,
+                          ),
+                          Text(
+                            sonProfile.pseudo,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 24),
+                          ),
+                        ],
                       ),
                     ]),
                     const SizedBox(
@@ -345,7 +321,7 @@ class _UserAccountPageState extends State<UserAccountPage> {
                     ))),
             child: const Center(
               child: Text(
-                "Mes recettes",
+                "Ses recettes",
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -359,67 +335,61 @@ class _UserAccountPageState extends State<UserAccountPage> {
           _buildUserRecettes()
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.deepOrange,
-        unselectedItemColor: Colors.deepOrange,
-        selectedFontSize: 19,
-        unselectedFontSize: 19,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: IconButton(
-              icon: const Icon(Icons.home),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => Home()),
-                );
-              },
-            ),
-            label: 'Accueil',
-          ),
-          BottomNavigationBarItem(
-            icon: IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SearchScreen()),
-                );
-              },
-            ),
-            label: 'Recherche',
-          ),
-          BottomNavigationBarItem(
-            icon: IconButton(
-              icon: const Icon(Icons.favorite_border),
-              onPressed: () {
-                if (myProfileRealTime != null) {
+      bottomNavigationBar: Container(
+        height: 81,
+        child: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          selectedItemColor: Colors.deepOrange,
+          unselectedItemColor: Colors.deepOrange,
+          selectedFontSize: 19,
+          unselectedFontSize: 19,
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: GestureDetector(
+                child: const Icon(Icons.home),
+                onTap: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => FavoritePage(
-                              profile: myProfileRealTime,
-                            )),
+                    MaterialPageRoute(builder: (context) => Home()),
                   );
-                }
-              },
+                },
+              ),
+              label: 'Accueil',
             ),
-            label: 'Favoris',
-          ),
-        ],
-        iconSize: 40,
-        elevation: 5,
+            BottomNavigationBarItem(
+              icon: GestureDetector(
+                child: const Icon(Icons.search),
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SearchScreen()),
+                  );
+                },
+              ),
+              label: 'Recherche',
+            ),
+            BottomNavigationBarItem(
+              icon: GestureDetector(
+                child: const Icon(Icons.favorite_border),
+                onTap: () {
+                  if (myProfileRealTime != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => FavoritePage(
+                                profile: myProfileRealTime,
+                              )),
+                    );
+                  }
+                },
+              ),
+              label: 'Favoris',
+            ),
+          ],
+          iconSize: 40,
+          elevation: 5,
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            final route = MaterialPageRoute(
-              builder: (context) => const AddNewRecette(),
-            );
-            Navigator.push(context, route);
-          },
-          backgroundColor: Colors.deepOrange,
-          label: const Text('ajouter une recette ')),
     );
   }
 }

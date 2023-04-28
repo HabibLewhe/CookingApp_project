@@ -137,7 +137,7 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                                 context,
                                 PageTransition(
                                     child:
-                                        UserAccountPage(signInMethod: signInMethod),
+                                        UserAccountPage(),
                                     type: PageTransitionType.bottomToTop));
                           }
                         }).catchError((error) {

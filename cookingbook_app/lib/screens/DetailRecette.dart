@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cookingbook_app/Utils/Utils.dart';
 import 'package:cookingbook_app/screens/CommentairesPage.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -58,16 +60,13 @@ class _DetailRecetteState extends State<DetailRecette> {
   bool _isEditMode = false;
   late bool _isLiked;
   late Map<Profile, Commentaire> commentaireMap;
-
-  List<String> pseudoListLocal = [];
-  late Map<Profile, Commentaire> commentListLocal;
-
-  late List<String> Idcommentaires = [];
+  StreamSubscription<Map<Profile, Commentaire>>? _commentaireSubscription;
 
   Future<void> getCommentaireMap() async {
     Stream<Map<Profile, Commentaire>> stream =
         firestoreService.getCommentaires(recette.idRecette);
-    stream.listen((Map<Profile, Commentaire> commentaires) {
+    _commentaireSubscription =
+        stream.listen((Map<Profile, Commentaire> commentaires) {
       setState(() {
         commentaireMap = commentaires;
 
@@ -75,6 +74,7 @@ class _DetailRecetteState extends State<DetailRecette> {
       });
     });
   }
+
 
   Future<void> updateRecette(
     String idRecette, {
@@ -133,7 +133,7 @@ class _DetailRecetteState extends State<DetailRecette> {
               children: <Widget>[
                 ListTile(
                   leading: const Icon(Icons.photo_library),
-                  title: const Text('Choisir une photo'),
+                  title: const Text('Photo Library'),
                   onTap: () {
                     _selectImage(ImageSource.gallery);
                     Navigator.pop(context);
@@ -141,7 +141,7 @@ class _DetailRecetteState extends State<DetailRecette> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_camera),
-                  title: const Text('Prendre une photo'),
+                  title: const Text('Camera'),
                   onTap: () {
                     _selectImage(ImageSource.camera);
                     Navigator.pop(context);
@@ -232,9 +232,9 @@ class _DetailRecetteState extends State<DetailRecette> {
     _instruction = "";
     recette = widget.recette;
     profileThisPage = widget.profile;
-    Idcommentaires = [];
+
     commentaireMap = {};
-    commentListLocal = {};
+
     getCommentaireMap();
     _nomController = TextEditingController(text: recette.nom);
     _tempsPreparationController = TextEditingController(
@@ -257,9 +257,10 @@ class _DetailRecetteState extends State<DetailRecette> {
   @override
   void dispose() {
     // TODO: implement dispose
-    commentListLocal = {};
+    _commentaireSubscription?.cancel();
+
     _ingredients = {};
-    commentaireMap = {};
+
     _nomIngredientsController = [];
     _imageFile = File('');
     _quantiteController = [];
@@ -335,11 +336,13 @@ class _DetailRecetteState extends State<DetailRecette> {
                         size: 30,
                       ),
                     )
-                  : const Icon(
-                      Icons.edit,
-                      size: 30,
-                      color: Colors.deepOrange,
-                    ),
+                  : profileThisPage.idProfile != recette.idUser
+                      ? Container()
+                      : Icon(
+                          Icons.edit,
+                          size: 30,
+                          color: Colors.deepOrange,
+                        ),
             ),
           ),
         ],
@@ -358,7 +361,11 @@ class _DetailRecetteState extends State<DetailRecette> {
             children: [
               GestureDetector(
                 onTap: () {
-                  _showImageSourceSelection(context);
+                 if(kIsWeb){
+
+                 }else{
+                   _showImageSourceSelection(context);
+                 }
                 },
                 child: Center(
                   child: Column(children: [
@@ -704,7 +711,7 @@ class _DetailRecetteState extends State<DetailRecette> {
         ),
       ),
       const SizedBox(
-        height: 8,
+        height: 16,
       ),
       GestureDetector(
         onTap: () {
@@ -713,7 +720,7 @@ class _DetailRecetteState extends State<DetailRecette> {
             PageTransition(
                 child: CommentairesPage(
                   recette: recette,
-                  profile: profileThisPage,
+                  idProfileCreeRecette: recette.idUser,
                 ),
                 type: PageTransitionType.rightToLeft),
           );
@@ -722,7 +729,10 @@ class _DetailRecetteState extends State<DetailRecette> {
           const SizedBox(
             width: 6,
           ),
-          const Icon(Icons.comment_outlined),
+          const Icon(
+            Icons.comment_outlined,
+            color: Colors.deepOrange,
+          ),
           const SizedBox(
             width: 6,
           ),
@@ -730,9 +740,12 @@ class _DetailRecetteState extends State<DetailRecette> {
               ? Text("${commentaireMap.length} commentaires.")
               : Text(
                   "cliquer pour voir ${commentaireMap.length} commentaires.",
-                  style: TextStyle(fontStyle: FontStyle.italic),
+                  style: const TextStyle(fontStyle: FontStyle.italic),
                 ),
         ]),
+      ),
+      const SizedBox(
+        height: 24,
       ),
       const Padding(
         padding: EdgeInsets.all(8.0),

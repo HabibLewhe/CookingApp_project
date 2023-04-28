@@ -1,14 +1,15 @@
+import 'dart:async';
+import 'package:cookingbook_app/screens/Home.dart';
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
-import '../Utils/catogories.dart';
 import '../Utils/color.dart';
-import '../Utils/explorecart2.dart';
+import '../Utils/explorecart.dart';
+import '../Utils/explorecart.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
 import '../services/FireStoreService.dart';
 import 'DetailRecette.dart';
 import 'FavoritePage.dart';
-import 'Home.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -23,6 +24,9 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Tuple2<Recette, Profile>> _searchResults = [];
   Set<String> categories = Set<String>();
   String selectedCategory = "";
+  late Profile myProfileRealTime;
+  StreamSubscription<List<Recette>>? _recettesTimeSubscription;
+  StreamSubscription<Profile>? _myProfileRealTimeSubscription;
 
   TextEditingController _searchController = TextEditingController();
   FirestoreService _firestoreService = FirestoreService();
@@ -30,15 +34,38 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   void initState() {
-    super.initState();
+    getMyProfileRealTime();
     _loadData();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    List<Profile> _profiles = [];
+    List<Recette> _recettes = [];
+    List<Tuple2<Recette, Profile>> _searchResults = [];
+    Set<String> categories = Set<String>();
+    String selectedCategory = "";
+    _searchController = TextEditingController();
+    _recettesTimeSubscription?.cancel();
+    _myProfileRealTimeSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> getMyRecettesRealTime() async {
     Stream<List<Recette>> stream = _firestoreService.getAllRecettesRealTime();
-    stream.listen((List<Recette> recettes) {
+    _recettesTimeSubscription = stream.listen((List<Recette> recettes) {
       setState(() {
         _recettes = recettes;
+      });
+    });
+  }
+
+  Future<void> getMyProfileRealTime() async {
+    Stream<Profile> stream = _firestoreService.getCurrentUserProfileRealTime();
+    _myProfileRealTimeSubscription = stream.listen((Profile profile) {
+      setState(() {
+        myProfileRealTime = profile;
       });
     });
   }
@@ -164,31 +191,12 @@ class _SearchScreenState extends State<SearchScreen> {
               const SizedBox(
                 height: 10,
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 13.0, left: 10),
-                child: Row(
-                  //for all categories, create a category widget
-                  children: [
-                    for (String category in categories)
-                      Catogeries(
-                        color:
-                            selectedCategory == category ? primary : cardColor,
-                        text: category,
-                        images: "assets/images/ramen.png",
-                        onTap: () {
-                          _searchController.text = category;
-                          _performSearch(category);
-                        },
-                      ),
-                  ],
-                ),
-              ),
               //for all _searchResults, show a explore cart
               for (Tuple2<Recette, Profile> tup in _searchResults)
-                ExploreCart2(
+                ExploreCart(
                   profile: tup.item2,
                   recette: tup.item1,
-                  onTap: () => _showRecetteDetails(tup.item2, tup.item1),
+                  onTap: () => _showRecetteDetails(myProfileRealTime, tup.item1),
                 ),
             ],
           ),
@@ -220,13 +228,15 @@ class _SearchScreenState extends State<SearchScreen> {
               icon: IconButton(
                 icon: const Icon(Icons.favorite_border),
                 onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => FavoritePage(
-                          profile: profile,
-                        )),
-                  );
+                  if (profile != null) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => FavoritePage(
+                                profile: profile!,
+                              )),
+                    );
+                  }
                 },
               ),
               label: 'Favoris',

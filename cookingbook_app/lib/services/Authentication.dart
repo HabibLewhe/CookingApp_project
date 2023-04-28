@@ -33,12 +33,11 @@ class Authentication with ChangeNotifier {
     }
   }
 
-
   Future<User?> signUp(
       {required String userEmail,
-        required String password,
-        required String pseudoNom,
-        required BuildContext context}) async {
+      required String password,
+      required String pseudoNom,
+      required BuildContext context}) async {
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: userEmail, password: password);
@@ -74,7 +73,6 @@ class Authentication with ChangeNotifier {
     User? user = userCredential.user;
     userUid = user!.uid;
 
-    print("Created account Uid => $userUid");
     notifyListeners();
     await userCredential.user!.sendEmailVerification();
     return userCredential;
@@ -89,7 +87,7 @@ class Authentication with ChangeNotifier {
 
       try {
         final UserCredential userCredential =
-        await firebaseAuth.signInWithPopup(googleProvider);
+            await firebaseAuth.signInWithPopup(googleProvider);
 
         user = userCredential.user;
         assert(user!.uid != null);
@@ -107,10 +105,10 @@ class Authentication with ChangeNotifier {
     } else {
       // sign in with Google on Android
       final GoogleSignInAccount? googleSignInAccount =
-      await googleSignIn.signIn();
+          await googleSignIn.signIn();
 
       final GoogleSignInAuthentication googleSignInAuthentication =
-      await googleSignInAccount!.authentication;
+          await googleSignInAccount!.authentication;
 
       final AuthCredential authCredential = GoogleAuthProvider.credential(
           accessToken: googleSignInAuthentication.accessToken,
@@ -118,7 +116,7 @@ class Authentication with ChangeNotifier {
 
       try {
         final UserCredential userCredential =
-        await firebaseAuth.signInWithCredential(authCredential);
+            await firebaseAuth.signInWithCredential(authCredential);
 
         user = userCredential.user;
         assert(user!.uid != null);
@@ -139,8 +137,7 @@ class Authentication with ChangeNotifier {
     notifyListeners();
   }
 
-
-  Future onLogout(String signInMethod) async {
+  Future onLogout() async {
     print("LogOut successuffly ! ");
     return firebaseAuth.signOut();
   }

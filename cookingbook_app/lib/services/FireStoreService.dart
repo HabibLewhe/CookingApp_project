@@ -58,6 +58,38 @@ class FirestoreService {
     }
   }
 
+  Stream<List<Recette>> getSesRecettesRealTime(String idSonProfile) async* {
+    Stream<QuerySnapshot> snapshots =
+        recetteCollection.where('idUser', isEqualTo: idSonProfile).snapshots();
+
+    await for (QuerySnapshot querySnapshot in snapshots) {
+      List<Recette> recettes = [];
+
+      for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        Recette recette = Recette(
+          idUser: data['idUser'],
+          idRecette: doc.id,
+          image: data['image'],
+          categorie: data['categorie'],
+          nom: data['nom'],
+          tempsPreparation: Duration(minutes: data['tempsPreparation']),
+          nbPersonne: data['nbPersonne'],
+          instruction: data['instruction'],
+          ingredients: Map<String, String>.from(data['ingredients']),
+          likeur:
+              (data['likeur'] != null) ? List<String>.from(data['likeur']) : [],
+          commentaires: (data['commentaires'] != null)
+              ? List<String>.from(data['commentaires'])
+              : [],
+        );
+        recettes.add(recette);
+      }
+
+      yield recettes;
+    }
+  }
+
   Future<bool> doesProfileExist(String idUser) async {
     DocumentSnapshot profileSnapshot =
         await profileCollection.doc(idUser).get();
@@ -220,6 +252,31 @@ class FirestoreService {
     return profile;
   }
 
+  Stream<Profile> getProfileByIdRealTime(String idProfile) {
+    return profileCollection.doc(idProfile).snapshots().map((snapshot) {
+      if (snapshot.exists) {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+
+        return Profile(
+          idProfile: snapshot.id,
+          imageAvatar: data['imageAvatar'],
+          pseudo: data['pseudo'],
+          likedRecette: (data['likedRecette'] != null)
+              ? List<String>.from(data['likedRecette'])
+              : [],
+        );
+      } else {
+        // Return null if the document does not exist
+        return Profile(
+          idProfile: '',
+          imageAvatar: '',
+          pseudo: '',
+          likedRecette: [],
+        );
+      }
+    });
+  }
+
   Stream<Profile> getCurrentUserProfileRealTime() {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -288,17 +345,19 @@ class FirestoreService {
   Stream<Map<Profile, Commentaire>> getCommentaires(String recipeId) async* {
     // Get the recipe document from Firebase
     final recipeDoc =
-    FirebaseFirestore.instance.collection('recette').doc(recipeId);
+        FirebaseFirestore.instance.collection('recette').doc(recipeId);
     final recipeSnap = await recipeDoc.get();
 
     // Get the list of comment IDs from the recipe document
-    final commentIds = List<String>.from(recipeSnap.data()!['commentaires']);
+    // final commentIds = List<String>.from(recipeSnap.data()!['commentaires']);
+    final commentIds =
+        List<String>.from(recipeSnap.data()?['commentaires'] ?? []);
 
     // Get the comment documents from Firebase and build a map of Profile to Commentaire
     final commentMap = Map<Profile, Commentaire>();
     await Future.forEach(commentIds, (String commentId) async {
       final commentDoc =
-      FirebaseFirestore.instance.collection('commentaire').doc(commentId);
+          FirebaseFirestore.instance.collection('commentaire').doc(commentId);
       final commentSnap = await commentDoc.get();
       final commentData = commentSnap.data();
       final comment = Commentaire(
@@ -310,7 +369,7 @@ class FirestoreService {
       );
 
       final profileDoc =
-      FirebaseFirestore.instance.collection('profile').doc(comment.idUser);
+          FirebaseFirestore.instance.collection('profile').doc(comment.idUser);
       final profileSnap = await profileDoc.get();
       final profileData = profileSnap.data();
       final profile = Profile(
@@ -330,7 +389,7 @@ class FirestoreService {
   Future<void> deleteCommentaire(String idCommentaire) async {
     try {
       final QuerySnapshot querySnapshot =
-      await _firestore.collection('recette').get();
+          await _firestore.collection('recette').get();
 
       final WriteBatch batch = _firestore.batch();
 
