@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -100,6 +101,28 @@ class _AddNewRecetteState extends State<AddNewRecette> {
   }
 
   File? _imageFile;
+
+  Future<void> _pickImageFromWeb() async {
+    final ImagePicker _picked = ImagePicker();
+    XFile? image = await _picked.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      var selected = File(image.path);
+      setState(() {
+        _imageFile = selected;
+      });
+    } else {
+      const text = "Vous n'avez ajouter aucune photo ";
+      final snackBar = SnackBar(
+        content: const Text(text),
+        action: SnackBarAction(
+          label: 'Annuler',
+          onPressed: () {},
+        ),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
+  }
 
   void _showImageSourceSelection(BuildContext context) {
     showDialog(
@@ -235,8 +258,13 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                       ? Column(
                           children: [
                             TextButton(
-                              onPressed: () =>
-                                  _showImageSourceSelection(context),
+                              onPressed: () {
+                                if (kIsWeb) {
+                                  _pickImageFromWeb();
+                                } else {
+                                  _showImageSourceSelection(context);
+                                }
+                              },
                               child: const Icon(
                                 Icons.image,
                                 color: Colors.deepOrange,
@@ -552,7 +580,6 @@ class _AddNewRecetteState extends State<AddNewRecette> {
       //print("this is imageFile.path ${_imageFile!.path}");
 
       if (_imageFile == null) {
-
         const text = "Vous n'avez ajouter aucune photo ";
         final snackBar = SnackBar(
           content: const Text(text),
@@ -564,7 +591,6 @@ class _AddNewRecetteState extends State<AddNewRecette> {
 
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       } else {
-
         String recetteImage = await firestoreService.uploadImageToFirebase(
             _imageFile!, 'recetteImages');
 

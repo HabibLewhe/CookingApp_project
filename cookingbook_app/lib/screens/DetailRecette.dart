@@ -124,6 +124,28 @@ class _DetailRecetteState extends State<DetailRecette> {
     });
   }
 
+  Future<void> _pickImageFromWeb() async{
+      final ImagePicker _picked = ImagePicker();
+      XFile? image = await _picked.pickImage(source: ImageSource.gallery);
+      if(image != null){
+        var selected = File(image.path);
+        setState(() {
+          _imageFile = selected;
+        });
+      }else{
+        const text = "Vous n'avez ajouter aucune photo ";
+        final snackBar = SnackBar(
+          content: const Text(text),
+          action: SnackBarAction(
+            label: 'Annuler',
+            onPressed: () {},
+          ),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+  }
+
   void _showImageSourceSelection(BuildContext context) {
     showDialog(
         context: context,
@@ -133,7 +155,7 @@ class _DetailRecetteState extends State<DetailRecette> {
               children: <Widget>[
                 ListTile(
                   leading: const Icon(Icons.photo_library),
-                  title: const Text('Photo Library'),
+                  title: const Text('Choisir une photo'),
                   onTap: () {
                     _selectImage(ImageSource.gallery);
                     Navigator.pop(context);
@@ -141,7 +163,7 @@ class _DetailRecetteState extends State<DetailRecette> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_camera),
-                  title: const Text('Camera'),
+                  title: const Text('Prendre une photo'),
                   onTap: () {
                     _selectImage(ImageSource.camera);
                     Navigator.pop(context);
@@ -338,7 +360,7 @@ class _DetailRecetteState extends State<DetailRecette> {
                     )
                   : profileThisPage.idProfile != recette.idUser
                       ? Container()
-                      : Icon(
+                      : const Icon(
                           Icons.edit,
                           size: 30,
                           color: Colors.deepOrange,
@@ -362,7 +384,7 @@ class _DetailRecetteState extends State<DetailRecette> {
               GestureDetector(
                 onTap: () {
                  if(kIsWeb){
-
+                   _pickImageFromWeb();
                  }else{
                    _showImageSourceSelection(context);
                  }

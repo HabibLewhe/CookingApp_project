@@ -13,9 +13,7 @@ import '../models/Profile.dart';
 class EditProfile extends StatefulWidget {
   final Profile profile;
 
-  const EditProfile(
-      {Key? key, required this.profile})
-      : super(key: key);
+  const EditProfile({Key? key, required this.profile}) : super(key: key);
 
   @override
   _EditProfileState createState() => _EditProfileState();
@@ -28,6 +26,28 @@ class _EditProfileState extends State<EditProfile> {
 
   final _formKey = GlobalKey<FormState>();
   File? _imageProfile;
+
+  Future<void> _pickImageFromWeb() async {
+    final ImagePicker _picked = ImagePicker();
+    final image = await _picked.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      var selected = File(image.path);
+      setState(() {
+        _imageProfile = selected;
+      });
+    } else {
+      const text = "Vous n'avez ajouter aucune photo ";
+      final snackBar = SnackBar(
+        content: const Text(text),
+        action: SnackBarAction(
+          label: 'Annuler',
+          onPressed: () {},
+        ),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
+  }
 
   void _showImageSourceSelection(BuildContext context) {
     showDialog(
@@ -113,6 +133,7 @@ class _EditProfileState extends State<EditProfile> {
       appBar: AppBar(
         backgroundColor: Colors.deepOrange,
         title: const Text("Modifier Profile"),
+        centerTitle: true,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 25.0),
@@ -121,11 +142,16 @@ class _EditProfileState extends State<EditProfile> {
                 if (_formKey.currentState!.validate()) {
                   String newImage = '';
                   if (_imageProfile == null) {
+                    print("Notre image est nulle, on garde l'ancienne");
                     newImage = widget.profile.imageAvatar;
                   } else {
+                    print("Notre image n'est pas nulle, on la change");
                     newImage = await firestoreService.uploadImageToFirebase(
                         _imageProfile!, 'profileImages');
+                    print("Affichons le chemin de notre image $newImage");
                   }
+
+                  print("On la balance sur firebase");
                   print("widget.profile.idProfiel ${widget.profile.idProfile}");
                   firestoreService
                       .updateProfile(
@@ -156,7 +182,11 @@ class _EditProfileState extends State<EditProfile> {
               ),
               GestureDetector(
                 onTap: () {
-                  _showImageSourceSelection(context);
+                  if (kIsWeb) {
+                    _pickImageFromWeb();
+                  } else {
+                    _showImageSourceSelection(context);
+                  }
                 },
                 child: Center(
                   child: Column(children: [
@@ -170,7 +200,15 @@ class _EditProfileState extends State<EditProfile> {
                               fit: BoxFit.cover,
                             ),
                           )
-                        : Image.file(_imageProfile!),
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(26),
+                            child: Image.network(
+                              _imageProfile!.path,
+                              width: 300,
+                              height: 200,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                     const SizedBox(
                       height: 16,
                     ),
@@ -197,7 +235,8 @@ class _EditProfileState extends State<EditProfile> {
                       style: const TextStyle(fontSize: 20, color: Colors.black),
                       decoration: InputDecoration(
                         focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.deepOrange),
+                          borderSide:
+                              const BorderSide(color: Colors.deepOrange),
                           borderRadius: BorderRadius.circular(5.5),
                         ),
                         enabledBorder: const OutlineInputBorder(
@@ -207,7 +246,8 @@ class _EditProfileState extends State<EditProfile> {
                         ),
                         labelStyle: const TextStyle(color: Colors.deepOrange),
                         labelText: 'Nouveau pseudo',
-                        prefixIcon: const Icon(Icons.person, color: Colors.deepOrange),
+                        prefixIcon:
+                            const Icon(Icons.person, color: Colors.deepOrange),
                         border: const OutlineInputBorder(),
                       ),
                       validator: (value) {
