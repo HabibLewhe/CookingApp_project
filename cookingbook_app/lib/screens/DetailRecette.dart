@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:cookingbook_app/Utils/Utils.dart';
 import 'package:cookingbook_app/screens/CommentairesPage.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -9,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:permission_handler/permission_handler.dart';
-
 import '../models/Commentaire.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';

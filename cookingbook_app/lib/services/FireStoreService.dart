@@ -578,16 +578,14 @@ class FirestoreService {
 // Update the 'likedRecette' field of a profile document in Firestore
 // You can pass a 'like' boolean flag to indicate whether to add or remove a recette ID from the 'likedRecette' list
 // crUd
-  Future<void> updateProfileLikedRecette(
-      String idProfile, String idRecette, bool like) async {
+  Future<void> updateProfileLikedRecette(String idProfile, String idRecette, bool like) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       DocumentReference profileRef = profileCollection.doc(idProfile);
       DocumentSnapshot profileSnapshot = await profileRef.get();
 
       if (profileSnapshot.exists) {
-        Map<String, dynamic>? data =
-            profileSnapshot.data() as Map<String, dynamic>?;
+        Map<String, dynamic>? data = profileSnapshot.data() as Map<String, dynamic>?;
         if (data != null && data.containsKey('likedRecette')) {
           List<String> likedRecette = List.from(data['likedRecette']);
           if (like) {
@@ -630,7 +628,34 @@ class FirestoreService {
 
     return profiles;
   }
+  Future<List<Recette>> getAllRecettes() async {
+    List<Recette> recettes = [];
 
+    QuerySnapshot querySnapshot = await recetteCollection.get();
+
+    for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      Recette recette = Recette(
+        idUser: data['idUser'],
+        idRecette: doc.id,
+        image: data['image'],
+        categorie: data['categorie'],
+        nom: data['nom'],
+        tempsPreparation: Duration(minutes: data['tempsPreparation']),
+        nbPersonne: data['nbPersonne'],
+        instruction: data['instruction'],
+        ingredients: Map<String, String>.from(data['ingredients']),
+        likeur:
+        (data['likeur'] != null) ? List<String>.from(data['likeur']) : [],
+        commentaires: (data['commentaires'] != null)
+            ? List<String>.from(data['likeur'])
+            : [],
+      );
+      recettes.add(recette);
+    }
+
+    return recettes;
+  }
   Stream<List<Recette>> getAllRecettesRealTime() async* {
     Stream<QuerySnapshot> snapshots = recetteCollection.snapshots();
 
@@ -660,5 +685,29 @@ class FirestoreService {
 
       yield recettes;
     }
+  }
+
+
+  //get recette by id
+  Future<Recette> getRecetteById(String idRecette) async {
+    DocumentSnapshot recetteDoc = await recetteCollection.doc(idRecette).get();
+    Map<String, dynamic> data = recetteDoc.data() as Map<String, dynamic>;
+    Recette recette = Recette(
+      idUser: data['idUser'],
+      idRecette: recetteDoc.id,
+      image: data['image'],
+      categorie: data['categorie'],
+      nom: data['nom'],
+      tempsPreparation: Duration(minutes: data['tempsPreparation']),
+      nbPersonne: data['nbPersonne'],
+      instruction: data['instruction'],
+      ingredients: Map<String, String>.from(data['ingredients']),
+      likeur: (data['likeur'] != null) ? List<String>.from(data['likeur']) : [],
+      commentaires: (data['commentaires'] != null)
+          ? List<String>.from(data['commentaires'])
+          : [],
+    );
+
+    return recette;
   }
 }

@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../Utils/Utils.dart';
+import '../Utils/color.dart';
 import '../models/Recette.dart';
 import '../services/Authentication.dart';
 import '../services/FireStoreService.dart';
@@ -234,7 +235,16 @@ class _AddNewRecetteState extends State<AddNewRecette> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.deepOrange,
+        //add back button
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            //pop with animation to the previous screen
+            Navigator.pop(context);
+
+          },
+        ),
+        backgroundColor: primary,
         title: Text('Créer une recette'),
         actions: [
           IconButton(
@@ -267,7 +277,7 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                               },
                               child: const Icon(
                                 Icons.image,
-                                color: Colors.deepOrange,
+                                color: primary,
                               ),
                             ),
                             const Text('No image selected'),
@@ -288,18 +298,18 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                 controller: _nomController,
                 decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Colors.deepOrange),
+                      borderSide: const BorderSide(color: primary),
                       borderRadius: BorderRadius.circular(5.5),
                     ),
                     enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(
-                        color: Colors.deepOrange,
+                        color: primary,
                       ),
                     ),
                     labelText: 'Nom de la  recette ',
                     prefixIcon: const Icon(
                       Icons.fastfood,
-                      color: Colors.deepOrange,
+                      color: primary,
                     ),
                     border: const OutlineInputBorder()),
                 validator: (value) {
@@ -328,18 +338,18 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                   dropdownColor: Colors.white,
                   decoration: InputDecoration(
                       focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Colors.deepOrange),
+                        borderSide: const BorderSide(color: primary),
                         borderRadius: BorderRadius.circular(5.5),
                       ),
                       enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(
-                          color: Colors.deepOrange,
+                          color: primary,
                         ),
                       ),
                       labelText: "Catégorie de la recette",
                       prefixIcon: const Icon(
                         Icons.category,
-                        color: Colors.deepOrange,
+                        color: primary,
                       ),
                       border: const OutlineInputBorder()),
                 ),
@@ -350,18 +360,18 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                 controller: _tempsPreparationController,
                 decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Colors.deepOrange),
+                      borderSide: const BorderSide(color: primary),
                       borderRadius: BorderRadius.circular(5.5),
                     ),
                     enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(
-                        color: Colors.deepOrange,
+                        color: primary,
                       ),
                     ),
                     labelText: 'Temps de préparation (minutes)',
                     prefixIcon: const Icon(
                       Icons.timelapse,
-                      color: Colors.deepOrange,
+                      color: primary,
                     ),
                     border: const OutlineInputBorder()),
                 keyboardType: TextInputType.number,
@@ -383,18 +393,18 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                 controller: _nbPersonneController,
                 decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Colors.deepOrange),
+                      borderSide: const BorderSide(color: primary),
                       borderRadius: BorderRadius.circular(5.5),
                     ),
                     enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(
-                        color: Colors.deepOrange,
+                        color: primary,
                       ),
                     ),
                     labelText: 'Nombre de personnes',
                     prefixIcon: const Icon(
                       Icons.people,
-                      color: Colors.deepOrange,
+                      color: primary,
                     ),
                     border: const OutlineInputBorder()),
                 keyboardType: TextInputType.number,
@@ -436,14 +446,14 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                               decoration: const InputDecoration(
                                 focusedBorder: UnderlineInputBorder(
                                   borderSide:
-                                      BorderSide(color: Colors.deepOrange),
+                                      BorderSide(color: primary),
                                 ),
                                 enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
-                                    color: Colors.deepOrange,
+                                    color: primary,
                                   ),
                                 ),
-                                labelStyle: TextStyle(color: Colors.deepOrange),
+                                labelStyle: TextStyle(color: primary),
                                 hintText: 'nom',
                               ),
                               validator: (value) {
@@ -463,11 +473,11 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                               decoration: const InputDecoration(
                                 focusedBorder: UnderlineInputBorder(
                                   borderSide:
-                                      BorderSide(color: Colors.deepOrange),
+                                      BorderSide(color: primary),
                                 ),
                                 enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
-                                    color: Colors.deepOrange,
+                                    color: primary,
                                   ),
                                 ),
                                 hintText: 'quantite',
@@ -494,11 +504,11 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                               decoration: const InputDecoration(
                                   focusedBorder: UnderlineInputBorder(
                                     borderSide:
-                                        BorderSide(color: Colors.deepOrange),
+                                        BorderSide(color: primary),
                                   ),
                                   enabledBorder: UnderlineInputBorder(
                                     borderSide: BorderSide(
-                                      color: Colors.deepOrange,
+                                      color: primary,
                                     ),
                                   )),
                               value: selectedVals[i],
@@ -527,11 +537,11 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                 child: const ListTile(
                   leading: Icon(
                     Icons.add_circle,
-                    color: Colors.deepOrange,
+                    color: primary,
                   ),
                   title: Text(
                     "ajouter un ingrédient",
-                    style: TextStyle(color: Colors.deepOrange),
+                    style: TextStyle(color: primary),
                   ),
                 ),
               ),
@@ -542,18 +552,18 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                 controller: _instructionController,
                 decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Colors.deepOrange),
+                      borderSide: const BorderSide(color: primary),
                       borderRadius: BorderRadius.circular(5.5),
                     ),
                     enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(
-                        color: Colors.deepOrange,
+                        color: primary,
                       ),
                     ),
                     labelText: 'Mode préparatoire',
                     prefixIcon: const Icon(
                       Icons.text_snippet,
-                      color: Colors.deepOrange,
+                      color: primary,
                     ),
                     border: const OutlineInputBorder()),
                 maxLines: 5,

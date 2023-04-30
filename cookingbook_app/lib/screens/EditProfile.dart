@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cookingbook_app/Utils/Utils.dart';
 import 'package:cookingbook_app/services/FireStoreService.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -7,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import '../Utils/color.dart';
 import '../models/Profile.dart';
 
 class EditProfile extends StatefulWidget {
@@ -131,7 +130,7 @@ class _EditProfileState extends State<EditProfile> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.deepOrange,
+        backgroundColor: primary,
         title: const Text("Modifier Profile"),
         centerTitle: true,
         actions: [
@@ -218,7 +217,7 @@ class _EditProfileState extends State<EditProfile> {
                       style: TextStyle(
                           //decoration: TextDecoration.underline,
                           fontWeight: FontWeight.bold,
-                          color: Colors.deepOrange),
+                          color: primary),
                     )),
                   ]),
                 ),
@@ -236,7 +235,7 @@ class _EditProfileState extends State<EditProfile> {
                       decoration: InputDecoration(
                         focusedBorder: OutlineInputBorder(
                           borderSide:
-                              const BorderSide(color: Colors.deepOrange),
+                              const BorderSide(color: primary),
                           borderRadius: BorderRadius.circular(5.5),
                         ),
                         enabledBorder: const OutlineInputBorder(
@@ -244,10 +243,10 @@ class _EditProfileState extends State<EditProfile> {
                             color: Colors.deepOrange,
                           ),
                         ),
-                        labelStyle: const TextStyle(color: Colors.deepOrange),
+                        labelStyle: const TextStyle(color: primary),
                         labelText: 'Nouveau pseudo',
                         prefixIcon:
-                            const Icon(Icons.person, color: Colors.deepOrange),
+                            const Icon(Icons.person, color: primary),
                         border: const OutlineInputBorder(),
                       ),
                       validator: (value) {

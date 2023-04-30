@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'color.dart';
+import '../color.dart';
 
 class Catogeries extends StatelessWidget {
   final Color color;
