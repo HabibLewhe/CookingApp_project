@@ -118,44 +118,38 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                 obscureText: true,
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      if (userEmailController.text.isNotEmpty &&
-                          userPasswordController.text.isNotEmpty) {
-                        auth
-                            .logIntoAccount(userEmailController.text,
-                                userPasswordController.text)
-                            .then((success) {
-                          if (success) {
-                            setState(() {
-                              signInMethod = "emailPassword";
-                            });
-                            Navigator.pushReplacement(
-                                context,
-                                PageTransition(
-                                    child:
-                                        UserAccountPage(),
-                                    type: PageTransitionType.bottomToTop));
-                          }
-                        }).catchError((error) {
-                          if (error.code == 'user-not-found') {
-                            warningText(context, "Utilisateur introuvable");
-                          } else if (error.code == 'wrong-password') {
-                            warningText(context, "Mot de passe erroné");
-                          }
+              ElevatedButton(
+                onPressed: () {
+                  if (userEmailController.text.isNotEmpty &&
+                      userPasswordController.text.isNotEmpty) {
+                    auth
+                        .logIntoAccount(userEmailController.text,
+                            userPasswordController.text)
+                        .then((success) {
+                      if (success) {
+                        setState(() {
+                          signInMethod = "emailPassword";
                         });
-                      } else {
-                        warningText(context, 'Veuillez remplir tous champs !');
+                        Navigator.pushReplacement(
+                            context,
+                            PageTransition(
+                                child: UserAccountPage(),
+                                type: PageTransitionType.bottomToTop));
                       }
-                    },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange),
-                    child: const Text('Se connecter'),
-                  ),
-                ],
+                    }).catchError((error) {
+                      if (error.code == 'user-not-found') {
+                        warningText(context, "Utilisateur introuvable");
+                      } else if (error.code == 'wrong-password') {
+                        warningText(context, "Mot de passe erroné");
+                      }
+                    });
+                  } else {
+                    warningText(context, 'Veuillez remplir tous champs !');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrange),
+                child: const Text('Se connecter'),
               ),
               const SizedBox(
                 height: 16,
@@ -170,10 +164,11 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                           decoration: TextDecoration.underline,
                           fontWeight: FontWeight.bold,
                           color: Colors.deepOrange),
-                      recognizer: TapGestureRecognizer()..onTap = () {
-                        // Navigate to sign up page
-                        signInSheet(context);
-                      })),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          // Navigate to sign up page
+                          signInSheet(context);
+                        })),
             ],
           ),
         ),
@@ -188,14 +183,13 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
         builder: (context) {
           return Padding(
             padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom
-            ),
+                bottom: MediaQuery.of(context).viewInsets.bottom),
             child: Expanded(
               child: Container(
                   height: MediaQuery.of(context).size.height * 0.60,
                   width: MediaQuery.of(context).size.width,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 20.0, horizontal: 20.0),
                   decoration: const BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
@@ -302,7 +296,8 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                                 });
                                 if (userEmailController.text.isNotEmpty &&
                                     userPasswordController.text.isNotEmpty &&
-                                    userPassWordConfirmController.text.isNotEmpty) {
+                                    userPassWordConfirmController
+                                        .text.isNotEmpty) {
                                   if (userPasswordController.text ==
                                       userPassWordConfirmController.text) {
                                     await auth.signUp(
@@ -322,7 +317,8 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                                         "Mots de passe incompatibles , recommencer");
                                   }
                                 } else {
-                                  warningText(context, "Veuillez remplir tous champs");
+                                  warningText(
+                                      context, "Veuillez remplir tous champs");
                                 }
                                 setState(() {
                                   _isLoading = false;
@@ -345,8 +341,7 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
         builder: (context) {
           return Container(
             decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(15.0)),
+                color: Colors.black, borderRadius: BorderRadius.circular(15.0)),
             height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width,
             child: Center(

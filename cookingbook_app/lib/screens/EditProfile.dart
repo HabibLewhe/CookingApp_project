@@ -202,13 +202,19 @@ class _EditProfileState extends State<EditProfile> {
                           )
                         : ClipRRect(
                             borderRadius: BorderRadius.circular(26),
-                            child: Image.network(
+                            child: Image.file(
+                              _imageProfile!,
+                              width: 300,
+                              height: 200,
+                              fit: BoxFit.cover,
+                            )
+                            /*Image.network(
                               _imageProfile!.path,
                               width: 300,
                               height: 200,
                               fit: BoxFit.cover,
+                            ),*/
                             ),
-                          ),
                     const SizedBox(
                       height: 16,
                     ),

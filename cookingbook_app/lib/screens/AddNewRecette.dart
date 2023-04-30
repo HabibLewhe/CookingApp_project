@@ -273,11 +273,14 @@ class _AddNewRecetteState extends State<AddNewRecette> {
                             const Text('No image selected'),
                           ],
                         )
-                      : Image.file(
-                          _imageFile!,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.fill,
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(26),
+                          child: Image.file(
+                            _imageFile!,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                 ),
               ),
