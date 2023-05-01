@@ -6,6 +6,9 @@ import 'package:cookingbook_app/services/Authentication.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:cookingbook_app/Utils/FirebaseConstants.dart';
 
+import '../screens2/home.dart';
+
+
 class LoginScreenForm extends StatefulWidget {
   @override
   _LoginScreenFormState createState() => _LoginScreenFormState();
@@ -23,8 +26,12 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return Container(
+        decoration: const BoxDecoration(
+        image: DecorationImage(
+        image: AssetImage('assets/images/login.png'), fit: BoxFit.cover),
+    ),
+    child:Scaffold(
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -137,7 +144,7 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
                                 context,
                                 PageTransition(
                                     child:
-                                        UserAccountPage(),
+                                      Home( signInMethod: signInMethod),
                                     type: PageTransitionType.bottomToTop));
                           }
                         }).catchError((error) {
@@ -178,7 +185,7 @@ class _LoginScreenFormState extends State<LoginScreenForm> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   signInSheet(BuildContext context) {

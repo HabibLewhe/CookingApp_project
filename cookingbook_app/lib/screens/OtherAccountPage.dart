@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:cookingbook_app/screens/FavoritePage.dart';
 import 'package:cookingbook_app/screens/Home.dart';
 import 'package:flutter/material.dart';
+import '../Utils/color.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
+import '../screens2/detailespage.dart';
 import '../services/Authentication.dart';
 import '../services/FireStoreService.dart';
 
+import '../utiles/explorecart2.dart';
 import 'DetailRecette.dart';
 import 'SearchScreen.dart';
 
@@ -63,6 +66,19 @@ class _OtherAccountPageState extends State<OtherAccountPage> {
         sonProfile = profile;
       });
     });
+  }
+
+  void _showRecetteDetails(Recette recette) async {
+    // Navigate to the DetailRecetteDemo screen with the ID of the selected recette
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Detailspage(
+          recette: recette,
+          profile: myProfileRealTime,
+        ),
+      ),
+    );
   }
 
   int computeTotalLikes(List<Recette> recettes) {
@@ -165,45 +181,46 @@ class _OtherAccountPageState extends State<OtherAccountPage> {
                       itemCount: recettes.length,
                       itemBuilder: (context, index) {
                         Recette recette = recettes[index];
-                        return Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ListTile(
-                            leading: AspectRatio(
-                              aspectRatio: 1.5,
-                              child: Image.network(
-                                recette.image,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            title: Text(
-                              "${recette.nom} - ${recette.categorie}",
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("Portions : ${recette.nbPersonne}"),
-                                Text(
-                                    "Temps de cuisson : ${(recette.tempsPreparation).inHours}h ${(recette.tempsPreparation).inMinutes % 60}min"),
-                              ],
-                            ),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => DetailRecette(
-                                    profile: myProfileRealTime,
-                                    recette: recette,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
+                        return ExploreCart2(recette: recette, profile: myProfileRealTime, onTap: () =>_showRecetteDetails(recette),);
                       });
+                        // return Padding(
+                        //   padding: const EdgeInsets.all(8.0),
+                        //   child: ListTile(
+                        //     leading: AspectRatio(
+                        //       aspectRatio: 1.5,
+                        //       child: Image.network(
+                        //         recette.image,
+                        //         width: 50,
+                        //         height: 50,
+                        //         fit: BoxFit.cover,
+                        //       ),
+                        //     ),
+                        //     title: Text(
+                        //       "${recette.nom} - ${recette.categorie}",
+                        //       style:
+                        //           const TextStyle(fontWeight: FontWeight.bold),
+                        //     ),
+                        //     subtitle: Column(
+                        //       mainAxisAlignment: MainAxisAlignment.end,
+                        //       crossAxisAlignment: CrossAxisAlignment.start,
+                        //       children: [
+                        //         Text("Portions : ${recette.nbPersonne}"),
+                        //         Text(
+                        //             "Temps de cuisson : ${(recette.tempsPreparation).inHours}h ${(recette.tempsPreparation).inMinutes % 60}min"),
+                        //       ],
+                        //     ),
+                        //     onTap: () {
+                        //       Navigator.of(context).push(
+                        //         MaterialPageRoute(
+                        //           builder: (context) => DetailRecette(
+                        //             profile: myProfileRealTime,
+                        //             recette: recette,
+                        //           ),
+                        //         ),
+                        //       );
+                        //     },
+                        //   ),
+                        // );
                 }),
           );
   }
@@ -213,9 +230,13 @@ class _OtherAccountPageState extends State<OtherAccountPage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.deepOrange,
+        backgroundColor: primary,
         title: const Text("Mon compte"),
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -246,7 +267,7 @@ class _OtherAccountPageState extends State<OtherAccountPage> {
               }
               Profile profile = snapshot.data!;
               return Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(10.0),
                 child: Row(
                   children: [
                     Column(children: [
@@ -257,8 +278,8 @@ class _OtherAccountPageState extends State<OtherAccountPage> {
                             child: Ink.image(
                               image: NetworkImage(profile.imageAvatar),
                               fit: BoxFit.cover,
-                              width: 100,
-                              height: 100,
+                              width: 80,
+                              height: 80,
                             ),
                           ),
                         ),
@@ -312,11 +333,11 @@ class _OtherAccountPageState extends State<OtherAccountPage> {
                 color: Colors.orange[50],
                 border: const Border(
                     top: BorderSide(
-                      color: Colors.deepOrange,
+                      color: primary,
                       width: 1,
                     ),
                     bottom: BorderSide(
-                      color: Colors.deepOrange,
+                      color: primary,
                       width: 1,
                     ))),
             child: const Center(
@@ -325,7 +346,7 @@ class _OtherAccountPageState extends State<OtherAccountPage> {
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepOrange),
+                    color: primary),
               ),
             ),
           ),
@@ -335,61 +356,8 @@ class _OtherAccountPageState extends State<OtherAccountPage> {
           _buildUserRecettes()
         ],
       ),
-      bottomNavigationBar: Container(
-        height: 81,
-        child: BottomNavigationBar(
-          backgroundColor: Colors.white,
-          selectedItemColor: Colors.deepOrange,
-          unselectedItemColor: Colors.deepOrange,
-          selectedFontSize: 19,
-          unselectedFontSize: 19,
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: GestureDetector(
-                child: const Icon(Icons.home),
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => Home()),
-                  );
-                },
-              ),
-              label: 'Accueil',
-            ),
-            BottomNavigationBarItem(
-              icon: GestureDetector(
-                child: const Icon(Icons.search),
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SearchScreen()),
-                  );
-                },
-              ),
-              label: 'Recherche',
-            ),
-            BottomNavigationBarItem(
-              icon: GestureDetector(
-                child: const Icon(Icons.favorite_border),
-                onTap: () {
-                  if (myProfileRealTime != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => FavoritePage(
-                                profile: myProfileRealTime,
-                              )),
-                    );
-                  }
-                },
-              ),
-              label: 'Favoris',
-            ),
-          ],
-          iconSize: 40,
-          elevation: 5,
-        ),
-      ),
     );
   }
 }
+
+

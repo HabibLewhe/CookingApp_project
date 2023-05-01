@@ -95,7 +95,7 @@ class _MyRegisterState extends State<MyRegister> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'connexion',
+                        'Sign In',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 27,
@@ -129,7 +129,7 @@ class _MyRegisterState extends State<MyRegister> {
                                   duration: const Duration(milliseconds: 1000)));
                         },
                         child: const Text(
-                          'connexion',
+                          'Login',
                           style: TextStyle(
                             decoration: TextDecoration.underline,
                             fontSize: 18,

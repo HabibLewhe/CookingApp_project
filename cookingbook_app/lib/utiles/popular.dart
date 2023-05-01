@@ -1,20 +1,36 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-
+import 'package:page_transition/page_transition.dart';
 import '../color.dart';
+import '../models/Profile.dart';
+import '../models/Recette.dart';
+import '../screens/OtherAccountPage.dart';
+import '../screens/UserAccountPage.dart';
 
 
 class Popularcart extends StatelessWidget {
-  final String images;
-  final String name;
-  final String userimage;
-  const Popularcart({Key? key, required this.images, required this.name, required this.userimage}) : super(key: key);
+  final Recette recette;
+  final Profile profile;
+  final VoidCallback onTap;
+
+  Popularcart(
+      {Key? key,
+        required this.recette,
+        required this.profile,
+        required this.onTap})
+      : super(key: key);
+
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return GestureDetector(
+        onTap: onTap  ,
+        child:        Padding(
+        padding: const EdgeInsets.all(7.0),
+    child:Stack(
       alignment: Alignment.center,
       children: [
+
         Container(
           height: 250,
           width: MediaQuery.of(context).size.width * 0.56,
@@ -22,26 +38,11 @@ class Popularcart extends StatelessWidget {
            
             borderRadius: BorderRadius.circular(15),
             image:  DecorationImage(
-                image: NetworkImage(images),
+                image: NetworkImage(recette.image),
                 fit: BoxFit.cover),
           ),
         ),
-        Positioned(
-            top: 10,
-            right: 10,
-            child: Container(
-                height: 30,
-                width: 30,
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30)),
-                child: Center(
-                    child: SvgPicture.asset(
-                  "assets/icons/bookmark.svg",
-                  height: 20,
-                  width: 20,
-                  color: primary,
-                )))),
+
         Positioned(
             bottom: 10,
             child: Center(
@@ -59,24 +60,32 @@ class Popularcart extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children:
                            [
-                             Text(name,style: const TextStyle(fontSize: 16,),),
+                             Text(recette.nom,style: const TextStyle(fontSize: 16,),),
                             const SizedBox(height: 7,),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children:  [
                                 Row(
-                                  children: [
-                                     CircleAvatar(
+                                  children: [GestureDetector(
+                                    onTap: () {
+                                      User? user = FirebaseAuth.instance.currentUser;
+                                      if (user!.uid ==profile.idProfile) {
+                                        Navigator.push(context, PageTransition(child: UserAccountPage(), type: PageTransitionType.leftToRight));
+                                      } else {
+                                        Navigator.push(context, PageTransition(child: OtherAccountPage(idProfile: profile.idProfile,), type: PageTransitionType.leftToRight));
+                                      }
+                                    },
+                                    child: CircleAvatar(
                                       radius: 16,
-                                      backgroundImage: NetworkImage(userimage),
-                                    ),
+                                      backgroundImage: NetworkImage(profile.imageAvatar),
+                                    )),
                                     Padding(
                                       padding: const EdgeInsets.only(left:8.0),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: const [
-                                          Text("David",style: TextStyle(fontSize: 14,color: textColor),),
-                                          Text("Nutrition",style: TextStyle(fontSize: 12,color: labelColor),)
+                                        children:  [
+                                          Text(profile.pseudo,style: TextStyle(fontSize: 14,color: textColor),),
+                                          Text("Chef",style: TextStyle(fontSize: 12,color: labelColor),)
                                         ],
                                       ),
                                     ),
@@ -93,9 +102,9 @@ class Popularcart extends StatelessWidget {
                                   child: Center(
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
-                                      children: const [
+                                      children:  [
                                         Icon(Icons.star,size: 15,color: Colors.black,),
-                                        Text("4.5")
+                                        Text(recette.nbPersonne.toString(),style: TextStyle(fontSize: 12,color: Colors.black),)
                                       ],
                                     ),
                                   ),
@@ -109,6 +118,6 @@ class Popularcart extends StatelessWidget {
               ),
             ))
       ],
-    );
+    )));
   }
 }

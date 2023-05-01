@@ -1,13 +1,17 @@
 import 'dart:async';
 
+import 'package:cookingbook_app/Utils/color.dart';
 import 'package:cookingbook_app/screens/FavoritePage.dart';
 import 'package:cookingbook_app/screens/Home.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
+import '../screens2/detailespage.dart';
 import '../services/Authentication.dart';
 import '../services/FireStoreService.dart';
 
+import '../utiles/explorecart2.dart';
 import 'AddNewRecette.dart';
 import 'DetailRecette.dart';
 import 'EditProfile.dart';
@@ -71,6 +75,19 @@ class _UserAccountPageState extends State<UserAccountPage> {
     super.initState();
   }
 
+  void _showRecetteDetails(Recette recette) async {
+    // Navigate to the DetailRecetteDemo screen with the ID of the selected recette
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Detailspage(
+          recette: recette,
+          profile: myProfileRealTime,
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -114,17 +131,28 @@ class _UserAccountPageState extends State<UserAccountPage> {
       );
 
   Widget _buildUserRecettes() {
-    return myRecetteRealTime.isEmpty
-        ? const Padding(
+     if(myRecetteRealTime.isEmpty)
+       return  Padding(
             padding: EdgeInsets.symmetric(vertical: 120),
-            child: Center(
-              child: Text(
-                "Vous n'avez encore aucune recette",
-                style: TextStyle(fontSize: 15),
-              ),
+            child: Column(
+              children: [
+                SvgPicture.asset(
+                  "assets/icons/empty.svg",
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  color: primary,
+                ),
+                 Text(
+                  "Aucune recette trouvée",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          )
-        : Flexible(
+          );
+
+    return Flexible(
             flex: 1,
             child: StreamBuilder<List<Recette>>(
                 stream: firestoreService.getRecettesRealTime(),
@@ -136,14 +164,18 @@ class _UserAccountPageState extends State<UserAccountPage> {
                   if (!snapshot.hasData) {
                     return CircularProgressIndicator();
                   }
+
                   List<Recette> recettes = snapshot.data!;
                   return ListView.separated(
                       separatorBuilder: (context, index) =>
-                          const Divider(color: Colors.black26),
+                           Divider(color: Colors.black26),
                       itemCount: recettes.length,
                       itemBuilder: (context, index) {
                         Recette recette = recettes[index];
-                        return Padding(
+                        return ExploreCart2(recette: recette, profile: myProfileRealTime, onTap: () =>_showRecetteDetails(recette),);
+
+
+                          Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: ListTile(
                             leading: AspectRatio(
@@ -182,7 +214,7 @@ class _UserAccountPageState extends State<UserAccountPage> {
                             trailing: IconButton(
                               icon: const Icon(
                                 Icons.delete,
-                                color: Colors.deepOrange,
+                                color: primary,
                               ),
                               onPressed: () {
                                 showDialog(
@@ -224,9 +256,13 @@ class _UserAccountPageState extends State<UserAccountPage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.deepOrange,
+        backgroundColor: primary,
         title: const Text("Mon compte"),
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -257,7 +293,7 @@ class _UserAccountPageState extends State<UserAccountPage> {
               }
               Profile profile = snapshot.data!;
               return Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(10.0),
                 child: Row(
                   children: [
                     Column(children: [
@@ -268,8 +304,8 @@ class _UserAccountPageState extends State<UserAccountPage> {
                             child: Ink.image(
                               image: NetworkImage(profile.imageAvatar),
                               fit: BoxFit.cover,
-                              width: 100,
-                              height: 100,
+                              width: 80,
+                              height: 80,
                               child: InkWell(onTap: () {
                                 Navigator.push(
                                     context,
@@ -291,7 +327,7 @@ class _UserAccountPageState extends State<UserAccountPage> {
                               child: ClipOval(
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
-                                  color: Colors.deepOrange,
+                                  color: primary,
                                   child: const Icon(
                                     Icons.edit,
                                     color: Colors.white,
@@ -307,7 +343,7 @@ class _UserAccountPageState extends State<UserAccountPage> {
                       Text(
                         profile.pseudo,
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 24),
+                            fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                     ]),
                     const SizedBox(
@@ -336,11 +372,11 @@ class _UserAccountPageState extends State<UserAccountPage> {
                 color: Colors.orange[50],
                 border: const Border(
                     top: BorderSide(
-                      color: Colors.deepOrange,
+                      color: primary,
                       width: 1,
                     ),
                     bottom: BorderSide(
-                      color: Colors.deepOrange,
+                      color: primary,
                       width: 1,
                     ))),
             child: const Center(
@@ -349,68 +385,18 @@ class _UserAccountPageState extends State<UserAccountPage> {
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepOrange),
+                    color: primary),
               ),
             ),
           ),
           const SizedBox(
             height: 16,
           ),
-          _buildUserRecettes()
+          _buildUserRecettes(),
+
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.deepOrange,
-        unselectedItemColor: Colors.deepOrange,
-        selectedFontSize: 19,
-        unselectedFontSize: 19,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: IconButton(
-              icon: const Icon(Icons.home),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => Home()),
-                );
-              },
-            ),
-            label: 'Accueil',
-          ),
-          BottomNavigationBarItem(
-            icon: IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SearchScreen()),
-                );
-              },
-            ),
-            label: 'Recherche',
-          ),
-          BottomNavigationBarItem(
-            icon: IconButton(
-              icon: const Icon(Icons.favorite_border),
-              onPressed: () {
-                if (myProfileRealTime != null) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => FavoritePage(
-                              profile: myProfileRealTime,
-                            )),
-                  );
-                }
-              },
-            ),
-            label: 'Favoris',
-          ),
-        ],
-        iconSize: 40,
-        elevation: 5,
-      ),
+
       floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
             final route = MaterialPageRoute(
@@ -418,7 +404,8 @@ class _UserAccountPageState extends State<UserAccountPage> {
             );
             Navigator.push(context, route);
           },
-          backgroundColor: Colors.deepOrange,
+          backgroundColor: primary,
+          icon: const Icon(Icons.add),
           label: const Text('ajouter une recette ')),
     );
   }

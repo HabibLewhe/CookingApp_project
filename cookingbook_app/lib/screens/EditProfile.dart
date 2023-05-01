@@ -133,6 +133,7 @@ class _EditProfileState extends State<EditProfile> {
         backgroundColor: primary,
         title: const Text("Modifier Profile"),
         centerTitle: true,
+
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 25.0),
@@ -240,7 +241,7 @@ class _EditProfileState extends State<EditProfile> {
                         ),
                         enabledBorder: const OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: Colors.deepOrange,
+                            color: primary,
                           ),
                         ),
                         labelStyle: const TextStyle(color: primary),

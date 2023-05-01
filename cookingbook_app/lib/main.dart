@@ -1,4 +1,5 @@
 import 'package:cookingbook_app/login/login.dart';
+import 'package:cookingbook_app/screens/LoginScreenForm.dart';
 import 'package:cookingbook_app/screens/SplashScreen.dart';
 import 'package:cookingbook_app/services/Authentication.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
           canvasColor: Colors.transparent,
           primarySwatch: Colors.blue,
         ),
-        home: MyLogin(),
+        home: LoginScreenForm(),
         debugShowCheckedModeBanner: false,
       ),
     );

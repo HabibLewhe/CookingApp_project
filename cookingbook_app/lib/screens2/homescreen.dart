@@ -28,6 +28,7 @@ class _HomescreenState extends State<Homescreen> {
   List<Profile> _profiles = [];
   List<Recette> _recettes = [];
   List<Recette> recommandedRecettes = [];
+  List<Recette> popularRecettes = [];
   Profile? thisProfile;
 
 
@@ -45,16 +46,25 @@ class _HomescreenState extends State<Homescreen> {
     _recettes.shuffle();
 
     List<Recette> recettes = [];
+    List<Recette> recettesPopular = [];
     //random between 2 and 4
     int random = 2 + (new DateTime.now().millisecondsSinceEpoch % 3);
     for (int i = 0; i < random; i++) {
       recettes.add(_recettes[i]);
     }
 
+    //choisi les recettes les plus populaires
+    for (Recette recette in _recettes) {
+      if (int.parse(recette.nbPersonne) > 5) {
+        recettesPopular.add(recette);
+      }
+    }
+
 
 
     setState(() {
       recommandedRecettes = recettes;
+      popularRecettes = recettesPopular;
     });
   }
 
@@ -153,7 +163,7 @@ class _HomescreenState extends State<Homescreen> {
                   height: 20,
                 ),
                 const Text(
-                  "Stay at home,",
+                  "Restez chez vous,",
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 30,
@@ -162,13 +172,13 @@ class _HomescreenState extends State<Homescreen> {
                 RichText(
                     text: const TextSpan(children: [
                   TextSpan(
-                      text: "make your own ",
+                      text: "cuisinez votre propre ",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 30,
                           color: textColor)),
                   TextSpan(
-                      text: "food",
+                      text: "RECETTE",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: primary,
@@ -182,7 +192,7 @@ class _HomescreenState extends State<Homescreen> {
                   height: 20,
                 ),
                 const Text(
-                  "Popular Recipes",
+                  "Recettes populaires",
                   style: TextStyle(
                       fontSize: 25,
                       color: textColor,
@@ -197,25 +207,8 @@ class _HomescreenState extends State<Homescreen> {
                     shrinkWrap: true,
                     scrollDirection: Axis.horizontal,
                     children:  [
-                     InkWell (
-                        child: const Popularcart(
-                            images:
-                                "https://images.unsplash.com/photo-1512058564366-18510be2db19?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=872&q=80",
-                            name: "Rice pot",
-                            userimage:
-                                "https://images.unsplash.com/photo-1557862921-37829c790f19?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8bWFufGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60"),
-                      ),
-                       Padding(
-                        padding: const EdgeInsets.only(left: 15.0),
-                        child: InkWell(
-                          child: const Popularcart(
-                              images:
-                                  "https://images.unsplash.com/photo-1623595119708-26b1f7300075?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=383&q=80",
-                              name: "Ice Cream",
-                              userimage:
-                                  "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"),
-                        ),
-                      )
+                      for (Recette recette in popularRecettes)
+                        Popularcart(recette: recette,profile: _trouverProfile(recette.idUser),onTap: () => _showRecetteDetails(recette)),
                     ],
                   ),
                 ),
@@ -223,7 +216,7 @@ class _HomescreenState extends State<Homescreen> {
                   height: 10,
                 ),
                 const Text(
-                  "Recommended Recipes",
+                  "Recettes recommandées",
                   style: TextStyle(
                       fontSize: 25,
                       color: textColor,

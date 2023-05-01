@@ -103,7 +103,7 @@ class _ExploreState extends State<Explore> {
             children:  [
               const Padding(
                 padding: EdgeInsets.all(10.0),
-                child: Text("Explore",
+                child: Text("Recherche",
                   style: TextStyle(fontWeight: FontWeight.bold,fontSize: 35,color: primary),),
               ),
               const SizedBox(
@@ -127,7 +127,7 @@ class _ExploreState extends State<Explore> {
                                 _performSearch(value);
                               },
                               decoration: InputDecoration(
-                                hintText: "Recherche",
+                                hintText: "Rechercher",
                                 border: InputBorder.none,
                                 suffixIcon: Icon(Icons.search),
                               ),

@@ -51,10 +51,15 @@ class Recommended extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children:  [
-                          Text(
-                            recette.nom,
-                            style: const TextStyle(color: textColor, fontSize: 16),
+                          SizedBox(
+                            width: 120,
+                            child: Text(
+                              recette.nom,
+                              style: const TextStyle(color: textColor, fontSize: 16 , fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis
+                            ),
                           ),
+
                           Padding(
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(

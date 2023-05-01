@@ -30,7 +30,7 @@ class _MyLoginState extends State<MyLogin> {
           Container(
             padding: const EdgeInsets.only(left: 35, top: 80),
             child: const Text(
-              "Bienvenue",
+              "Welcome\nBack",
               style: TextStyle(color: Colors.white, fontSize: 33),
             ),
           ),
@@ -61,7 +61,7 @@ class _MyLoginState extends State<MyLogin> {
                   decoration: InputDecoration(
                     fillColor: Colors.grey.shade100,
                     filled: true,
-                    hintText: 'mot de passe',
+                    hintText: 'Password',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -74,7 +74,7 @@ class _MyLoginState extends State<MyLogin> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'connexion',
+                      'Sign In',
                       style: TextStyle(
                         color: Color(0xff4c505b),
                         fontSize: 27,
@@ -87,19 +87,28 @@ class _MyLoginState extends State<MyLogin> {
                       child: IconButton(
                         color: Colors.white,
                         onPressed: () {
-                          auth.logIntoAccount(userEmailController.text,userPasswordController.text)
-                              .then((success) {
+                        if (userEmailController.text.isNotEmpty && userPasswordController.text.isNotEmpty) {
+
+                          auth.logIntoAccount(userEmailController.text,userPasswordController.text).then((success) {
                           if (success) {
-                              setState(() {
-                                  signInMethod = "emailPassword";
-                              });
-                              Navigator.pushReplacement(
-                              context,
-                               PageTransition(
-                                  child: Home(signInMethod: signInMethod),
-                                  type: PageTransitionType.bottomToTop));
-                                }
-                              });
+                            setState(() {
+                            signInMethod = "emailPassword";
+                            });
+                            Navigator.pushReplacement(
+                            context,PageTransition(
+                            child: Home(signInMethod: signInMethod),
+                            type: PageTransitionType.bottomToTop));}
+                          }).catchError((error) {
+                              if (error.code == 'user-not-found') {
+                                    warningText(context, "Utilisateur introuvable");
+                              } else if (error.code == 'wrong-password') {
+                                      warningText(context, "Mot de passe erroné");
+                              } else {
+                                      warningText(context, "Erreur de connexion");
+                              }
+                          });
+                           } else {
+                                    warningText(context, 'Veuillez remplir tous champs !');}
                         },
                         icon: const Icon(Icons.arrow_forward),
                       ),
@@ -124,7 +133,7 @@ class _MyLoginState extends State<MyLogin> {
 
                         },
                         child: const Text(
-                          'inscription',
+                          'Sign Up',
                           style: TextStyle(
                             decoration: TextDecoration.underline,
                             fontSize: 18,
@@ -140,5 +149,28 @@ class _MyLoginState extends State<MyLogin> {
         ]),
       ),
     );
+  }
+
+
+
+  warningText(BuildContext context, String warning) {
+    return showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Container(
+            decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(15.0)),
+            height: MediaQuery.of(context).size.height * 0.1,
+            width: MediaQuery.of(context).size.width,
+            child: Center(
+              child: Text(warning,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold)),
+            ),
+          );
+        });
   }
 }

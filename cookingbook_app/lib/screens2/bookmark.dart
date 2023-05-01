@@ -148,7 +148,7 @@ class _BookmarkState extends State<Bookmark> {
                             _performSearch(value);
                           },
                           decoration: InputDecoration(
-                            hintText: "recherche",
+                            hintText: "Rechercher",
                             border: InputBorder.none,
                             suffixIcon: Icon(Icons.search),
                           ),

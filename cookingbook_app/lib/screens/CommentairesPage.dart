@@ -5,10 +5,13 @@ import 'package:cookingbook_app/services/FireStoreService.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:velocity_x/velocity_x.dart';
 
+import '../Utils/color.dart';
 import '../models/Commentaire.dart';
 import '../models/Profile.dart';
 import '../models/Recette.dart';
+import '../utiles/commantaireW.dart';
 import 'UserAccountPage.dart';
 
 class CommentairesPage extends StatefulWidget {
@@ -105,12 +108,42 @@ class _CommentairesPageState extends State<CommentairesPage> {
     super.dispose();
   }
 
+  AlertDialog showAlertDialog(BuildContext context, String idCommentaire) {
+    AlertDialog alert = AlertDialog(
+      title: const Text('Confirmation', style: TextStyle(color: primary, fontWeight: FontWeight.bold)),
+      content: const Text('Voulez-vous supprimer ce commentaire ?'),
+      //make corners with radius of 40
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+
+      actions: [
+        TextButton(
+          child: const Text(
+            'Annuler',
+            style: TextStyle(color: Colors.red),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        TextButton(
+          child: const Text(
+            'Confirmer',
+            style: TextStyle(color: Colors.green),
+          ),
+          onPressed: () async {
+            firestoreService.deleteCommentaire(idCommentaire);
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    );
+    return alert;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bottomBarColor,
       appBar: AppBar(
-        backgroundColor: Colors.deepOrange,
+        backgroundColor: primary,
         title: const Text('Commentaires'),
         centerTitle: true,
       ),
@@ -121,11 +154,13 @@ class _CommentairesPageState extends State<CommentairesPage> {
                 StreamBuilder<Map<Profile, Commentaire>>(
                     stream: firestoreService.getCommentaires(recette.idRecette),
                     builder: (context, snapshot) {
+
                       if (!snapshot.hasData) {
                         return const CircularProgressIndicator(
-                          color: Colors.transparent,
+                          color: primary,
                         );
                       }
+
                       if (snapshot.hasError) {
                         return Text('Error: ${snapshot.error}');
                       }
@@ -138,12 +173,9 @@ class _CommentairesPageState extends State<CommentairesPage> {
                           itemBuilder: (BuildContext context, int index) {
                             Profile profileCmt = commentList[index].key;
                             Commentaire cmt = commentList[index].value;
-                            DateTime now =
-                                DateTime.now(); // Get the current time
-                            Duration difference = now.difference(
-                                cmt.dateTime); // Calculate the difference
+                            DateTime now = DateTime.now(); // Get the current time
+                            Duration difference = now.difference(cmt.dateTime); // Calculate the difference
                             String timeDiff = "";
-
                             if (difference.inHours == 0) {
                               timeDiff = "${difference.inMinutes}m";
                             } else if (difference.inHours >= 24) {
@@ -153,124 +185,22 @@ class _CommentairesPageState extends State<CommentairesPage> {
                             }
                             return GestureDetector(
                               onLongPress: () {
-                                //delete
-
-                                myCurrentProfile.idProfile !=
-                                        profileCmt.idProfile
-                                    ? ""
-                                    : showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: const Text('Confirmation'),
-                                            content: const Text(
-                                                'Are you sure that you want to delete this comment?'),
-                                            actions: [
-                                              TextButton(
-                                                child: const Text('Cancel'),
-                                                onPressed: () =>
-                                                    Navigator.of(context).pop(),
-                                              ),
-                                              TextButton(
-                                                child: const Text('Confirm'),
-                                                onPressed: () async {
-                                                  firestoreService
-                                                      .deleteCommentaire(
-                                                          cmt.idCommentaire);
-                                                  Navigator.of(context).pop();
-                                                },
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
+                                //si le commentaire est de moi, je peux le supprimer
+                                if(myCurrentProfile.idProfile == profileCmt.idProfile){
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return showAlertDialog(context, cmt.idCommentaire);
+                                    },
+                                  );
+                                }
                               },
-                              child: Card(
-                                child: ListTile(
-                                    trailing: SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.9,
-                                        child: Row(children: [
-                                          SizedBox(
-                                            height: 35,
-                                            width: 35,
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                User? user = FirebaseAuth
-                                                    .instance.currentUser;
-                                                if (user!.uid ==
-                                                    profileCmt.idProfile) {
-                                                  Navigator.pushReplacement(
-                                                      context,
-                                                      PageTransition(
-                                                          child:
-                                                              UserAccountPage(),
-                                                          type:
-                                                              PageTransitionType
-                                                                  .leftToRight));
-                                                } else {
-                                                  Navigator.pushReplacement(
-                                                      context,
-                                                      PageTransition(
-                                                          child:
-                                                              OtherAccountPage(
-                                                            idProfile:
-                                                                profileCmt
-                                                                    .idProfile,
-                                                          ),
-                                                          type:
-                                                              PageTransitionType
-                                                                  .leftToRight));
-                                                }
-                                              },
-                                              child: Image.network(
-                                                  profileCmt.imageAvatar),
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            width: 4,
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 10),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  "${profileCmt.pseudo}:",
-                                                  style: const TextStyle(
-                                                      color: Colors.blue,
-                                                  fontSize: 20),
-                                                ),
-                                                Text(
-                                                  timeDiff,
-                                                  style:
-                                                      const TextStyle(fontSize: 13),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            width: 4,
-                                          ),
-                                          Flexible(
-                                            flex: 10,
-                                            fit: FlexFit.tight,
-                                            child: Text(
-                                              cmt.content,
-                                              style: const TextStyle(
-                                                  color: Colors.black87,
-                                              fontSize: 18),
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            width: 20,
-                                          )
-                                        ]))),
+                              child: CommentaireW(
+                                profil: profileCmt,
+                                commentaire: cmt,
+                                date: timeDiff,
                               ),
+
                             );
                           },
                         ),
@@ -279,47 +209,35 @@ class _CommentairesPageState extends State<CommentairesPage> {
                 Container(
                   //Commentaire
                   width: 450,
-                  height: 40,
+                  height: 50,
                   decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    color: Colors.grey[300],
+                    //thikness: 1,
+                      border: Border.all(color: primary,width: 2),
+                      borderRadius: BorderRadius.circular(25)
                   ),
-                  child: Row(children: [
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    SizedBox(
-                      width: 300,
-                      child: TextField(
-                        decoration: const InputDecoration(
-                          hintText: 'ajouter un commentaire ...',
+                  child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                              controller: _commentaireController,
+                              decoration: const InputDecoration.collapsed(hintText: "ajouter un commentaire ...")
+                          ),
                         ),
-                        controller: _commentaireController,
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.black),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 65,
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Commentaire cmt = Commentaire(
-                            idUser: myCurrentProfile.idProfile,
-                            content: _commentaireController.text,
-                            idRecette: recette.idRecette,
-                            idCommentaire: '',
-                            dateTime: DateTime.now());
-                        firestoreService.addCommentaire(cmt, recette);
-                        _commentaireController.clear();
-                      },
-                      child: const Icon(
-                        Icons.send,
-                        size: 25,
-                        color: Colors.deepOrange,
-                      ),
-                    ),
-                  ]),
+                        IconButton(
+                            onPressed: (){
+                                  Commentaire cmt = Commentaire(
+                                  idUser: myCurrentProfile.idProfile,
+                                  content: _commentaireController.text,
+                                  idRecette: recette.idRecette,
+                                  idCommentaire: '',
+                                  dateTime: DateTime.now());
+                                  firestoreService.addCommentaire(cmt, recette);
+                                  _commentaireController.clear();
+                                },
+                            icon: const Icon(Icons.send, color: primary, size: 30,)
+                        )
+                      ]
+                  ).px16(),
                 ),
               ],
             ),

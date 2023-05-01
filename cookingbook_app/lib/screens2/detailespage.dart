@@ -194,39 +194,43 @@ class _DetailspageState extends State<Detailspage> {
                                 child: SizedBox(
                                 height: 80,
                                 width: MediaQuery.of(context).size.width,
-                                child:Column(
-                                  children: [
-                                    for(int i=0;i<ingre.length;i++)
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            children:  [
-                                              Icon(Icons.trip_origin, color: primary, size: 20,),
-                                              SizedBox(width: 4,),
-                                              Text(ingre[i].item1),
-                                              Text(ingre[i].item2)
-                                            ],
-                                          ),
-                                         if(i+1<ingre.length)
-                                              Row(
-                                              children:  [
+                                child: ListView(
+                                    shrinkWrap: true,
+                                    scrollDirection: Axis.horizontal,
+                                    children: [
+                                      for (int i = 0; i < ingre.length; i++)
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Container(
+                                            height: 80,
+                                            width: 80,
+                                            decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(10),
+                                                color: Colors.white,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                      color: Colors.grey.withOpacity(0.2),
+                                                      spreadRadius: 2,
+                                                      blurRadius: 2,
+                                                      offset: const Offset(0, 3))
+                                                ]),
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
                                                 Icon(Icons.trip_origin, color: primary, size: 20,),
                                                 SizedBox(width: 4,),
-                                                Text(ingre[i+1].item1),
-                                                Text(ingre[i+1].item2)
+                                                Text(ingre[i].item1),
+                                                Text(ingre[i].item2)
                                               ],
+                                            ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-
-                                  ],
+                                        ),
+                                    ],
+                                  ),
                                 ),
-                              ) ),
+                              ),
                             ),
+
                            const Padding(
                               padding: EdgeInsets.only(top:20.0),
                               child: Text("instructions",style: TextStyle(fontSize: 16))),

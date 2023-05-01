@@ -2,10 +2,8 @@ import 'package:cookingbook_app/models/Recette.dart';
 
 class Profile {
   String idProfile; // = idUser authentification
-
   String imageAvatar;
   String pseudo;
-
   List<String> likedRecette;
 
   Profile(

@@ -41,11 +41,10 @@ class _HomeState extends State<Home> {
           onTap: select,
           selectedItemColor: primary,
           unselectedItemColor: inActiveColor,
-          selectedIconTheme: const IconThemeData(color: primary),
           backgroundColor: bottomBarColor,
           items: [
             BottomNavigationBarItem(
-              label: "Recherche",
+              label: "Rechercher",
               
                 icon: SvgPicture.asset(
               "assets/icons/search.svg",
@@ -54,14 +53,13 @@ class _HomeState extends State<Home> {
               width: 25,
             )),
             BottomNavigationBarItem(
-              label: "Accueil",
-                icon: SvgPicture.asset("assets/icons/home.svg",
-                    height: 25, width: 25)),
+                icon: SvgPicture.asset("assets/icons/home.svg", height: 25, width: 25),
+                label: "Accueil",
+            ),
             BottomNavigationBarItem(
               label: "Favoris",
-              icon: Icon(Icons.favorite, size: 25, color: Color(0xFFf9c920)),
-            ),
-
+                icon: SvgPicture.asset("assets/icons/bookmark.svg",
+                    height: 25, width: 25)),
           ]),
     );
   }
